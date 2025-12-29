@@ -21,6 +21,37 @@ const API = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// ✅ Request interceptor for debugging and validation
+API.interceptors.request.use(
+  (config) => {
+    // Ensure data is properly serialized
+    if (config.data && typeof config.data === 'object') {
+      try {
+        // Test if data can be stringified
+        JSON.stringify(config.data);
+      } catch (err) {
+        console.error('❌ Cannot serialize request data:', err);
+        throw new Error('Invalid request data format');
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// ✅ Response interceptor for better error handling
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 400 && error.response?.data?.error?.includes('JSON')) {
+      console.error('❌ Server JSON parsing error:', error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ------------------------------
 // 🧾 FORM UPDATE FLOW (existing email system)
 // ------------------------------

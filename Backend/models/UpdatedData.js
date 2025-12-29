@@ -42,6 +42,10 @@ const UpdatedDataSchema = new mongoose.Schema({
     linkedinId: String
   },
   submittedAt: { type: Date, default: Date.now },
+  // status: pending | completed | failed
+  status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+  // productionUserId: store userId created in production DB (if successful)
+  productionUserId: { type: String, default: null },
 });
 
 export default mongoose.model('UpdatedData', UpdatedDataSchema);

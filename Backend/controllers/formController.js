@@ -253,15 +253,28 @@ const verifyPhoneOtp = async (req, res) => {
 // ------------------------------
 const submitForm = async (req, res) => {
   try {
+    // ✅ Add debugging for incoming request
+    console.log('📨 Received form submission request');
+    console.log('Request headers:', req.headers['content-type']);
+    console.log('Request body keys:', Object.keys(req.body));
+    
     const { token, firebaseToken, ...formData } = req.body;
 
     // ✅ Validate token and firebaseToken
     if (!token || token.trim() === '') {
+      console.error('❌ Invalid token:', token);
       return res.status(400).json({ message: 'Valid token required' });
     }
     
     if (!firebaseToken || firebaseToken.trim() === '') {
+      console.error('❌ Invalid firebaseToken:', firebaseToken);
       return res.status(400).json({ message: 'Firebase token required' });
+    }
+    
+    // ✅ Validate Firebase token format (should be a JWT)
+    if (!firebaseToken.startsWith('eyJ')) {
+      console.error('❌ Invalid Firebase token format:', firebaseToken.substring(0, 20));
+      return res.status(400).json({ message: 'Invalid Firebase token format' });
     }
 
     // ✅ Validate field lengths
@@ -289,8 +302,8 @@ const submitForm = async (req, res) => {
       return res.status(400).json({ message: 'Your session has expired. Please request a new link.' });
     }
 
-    // Check if already submitted
-    const alreadySubmitted = await UpdatedData.findOne({ user: log.user });
+    // Check if already submitted (only consider successful submissions)
+    const alreadySubmitted = await UpdatedData.findOne({ user: log.user, status: 'completed' });
     if (alreadySubmitted) {
       return res.status(400).json({ message: 'You have already submitted this form' });
     }
@@ -322,22 +335,7 @@ const submitForm = async (req, res) => {
       });
     }
 
-    // ✅ Check if phone belongs to another user in PRODUCTION DB
-    const ProdUser = await getProdUserModel();
-    
-    // Normalize phone for User schema (10 digits only)
-    const phoneForUserSchema = normalizePhoneForUser(normalizedFormPhone);
-    
-    const existingProdUser = await ProdUser.findOne({ 
-      phoneNumber: phoneForUserSchema
-    });
-    
-    if (existingProdUser) {
-      return res.status(400).json({ 
-        message: 'This phone number is already registered to another account.',
-        userId: existingProdUser.userId
-      });
-    }
+    // NOTE: duplicate checks (email/phone/github) are handled below
 
     // Organization Type mapping
     const ORG_TYPE_LABELS = {
@@ -368,43 +366,162 @@ const submitForm = async (req, res) => {
       discordId: formData.discordId?.trim() || null,
       linkedinId: formData.linkedinId?.trim() || null,
     };
+    // -----------------------------
+    // NEW FLOW: Check duplicates before creating UpdatedData
+    // -----------------------------
+    const ProdUser = await getProdUserModel();
+    const phoneForUserSchema = normalizePhoneForUser(normalizePhone(cleanedData.phone));
 
-    // ✅ Step 1: Create UpdatedData record (for audit trail)
-    console.log(`📝 Creating UpdatedData record for ${cleanedData.email || cleanedData.phone}...`);
-    const updatedData = await UpdatedData.create({
-      user: log.user,
-      updatedData: cleanedData,
-      submittedAt: new Date(),
-    });
-    console.log(`✅ UpdatedData record created with ID: ${updatedData._id}`);
-
-    // ✅ Step 2: Create user directly in production database
-    console.log(`🚀 Creating user directly in production DB...`);
-    try {
-      const result = await createUserInProduction(cleanedData, firebaseToken);
-      
-      if (!result.success) {
-        // User already exists - return 409 Conflict with details
-        return res.status(409).json({ 
-          message: `User already exists: ${result.reason}`,
-          userId: result.userId,
-          existingUser: true
-        });
+    // duplicate checks
+    if (cleanedData.email) {
+      const existingByEmail = await ProdUser.findOne({ primaryEmail: cleanedData.email.toLowerCase().trim() }).lean();
+      if (existingByEmail) {
+        return res.status(409).json({ message: `User already exists: duplicate_email`, userId: existingByEmail.userId, existingUser: true });
       }
-      
-      console.log(`✅ User created in production DB: ${result.userId}`);
-      
-      // Store the created userId for reference
-      updatedData.productionUserId = result.userId;
-      await updatedData.save();
-      
-    } catch (prodErr) {
-      console.error('❌ Production user creation failed:', prodErr);
-      // Fail the submission if we can't create in production
-      return res.status(500).json({ 
-        message: "Unable to create user account. Please try again or contact support.",
-        error: prodErr.message
-      });
+    }
+
+    if (phoneForUserSchema) {
+      const existingByPhone = await ProdUser.findOne({ phoneNumber: phoneForUserSchema }).lean();
+      if (existingByPhone) {
+        return res.status(409).json({ message: `User already exists: duplicate_phone`, userId: existingByPhone.userId, existingUser: true });
+      }
+    }
+
+    if (cleanedData.githubUrl) {
+      const existingByGithub = await ProdUser.findOne({ githubUrl: cleanedData.githubUrl.trim() }).lean();
+      if (existingByGithub) {
+        return res.status(409).json({ message: `User already exists: duplicate_github`, userId: existingByGithub.userId, existingUser: true });
+      }
+    }
+
+    // ✅ Step: attempt to use transactions; fallback if not supported
+    let session = null;
+    let useTransaction = true;
+    try {
+      session = await mongoose.startSession();
+      // starting a transaction will fail on standalone mongod (not replica set)
+      session.startTransaction();
+    } catch (txErr) {
+      console.warn('⚠️ MongoDB transactions not supported in this environment, falling back to non-transactional flow:', txErr.message);
+      useTransaction = false;
+      if (session) {
+        try { session.endSession(); } catch (e) { /* ignore */ }
+        session = null;
+      }
+    }
+
+    let updatedData;
+    if (useTransaction) {
+      try {
+        console.log(`📝 Creating UpdatedData record (pending) for ${cleanedData.email || cleanedData.phone}...`);
+        updatedData = await UpdatedData.create([{ user: log.user, updatedData: cleanedData, submittedAt: new Date(), status: 'pending' }], { session });
+        updatedData = updatedData[0];
+        console.log(`✅ UpdatedData (pending) created with ID: ${updatedData._id}`);
+
+        // Try to create user in production
+        console.log(`🚀 Creating user directly in production DB...`);
+        const result = await createUserInProduction(cleanedData, firebaseToken);
+
+        if (!result.success) {
+          // User already exists or other duplicate; abort and return
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(409).json({ message: `User already exists: ${result.reason}`, userId: result.userId, existingUser: true });
+        }
+
+        console.log(`✅ User created in production DB: ${result.userId}`);
+
+        // Update updatedData with productionUserId and mark completed
+        updatedData.productionUserId = result.userId;
+        updatedData.status = 'completed';
+        await updatedData.save({ session });
+
+        // commit transaction
+        await session.commitTransaction();
+        session.endSession();
+
+      } catch (prodErr) {
+        console.error('❌ createUserInProduction failed or transaction error:', prodErr);
+        try { await session.abortTransaction(); } catch (e) { console.warn('Failed to abort transaction:', e); }
+        try { session.endSession(); } catch (e) { /* ignore */ }
+
+        // If the error indicates transactions are not supported on the prod DB,
+        // fallback to non-transactional flow: create UpdatedData (non-transactional),
+        // try to create user, and cleanup pending UpdatedData on failure.
+        const isTxnUnsupported = (prodErr && (prodErr.code === 20 || String(prodErr.message).includes('Transaction numbers are only allowed')));
+        if (isTxnUnsupported) {
+          console.warn('⚠️ Transactions unsupported on prod DB; attempting fallback non-transactional flow');
+          try {
+            // Create UpdatedData non-transactionally
+            const pending = await UpdatedData.create({ user: log.user, updatedData: cleanedData, submittedAt: new Date(), status: 'pending' });
+            console.log(`✅ (Fallback after txn error) Created UpdatedData pending: ${pending._id}`);
+
+            const result2 = await createUserInProduction(cleanedData, firebaseToken);
+            if (!result2.success) {
+              // Cleanup pending record
+              try { await UpdatedData.deleteOne({ _id: pending._id }); } catch (delErr) { console.warn('Failed to delete pending UpdatedData after createUser failure in fallback:', delErr); }
+              return res.status(409).json({ message: `User already exists: ${result2.reason}`, userId: result2.userId, existingUser: true });
+            }
+
+            // mark completed
+            pending.productionUserId = result2.userId;
+            pending.status = 'completed';
+            await pending.save();
+
+            // continue the normal flow: mark token used and cleanup
+            log.usedAt = new Date();
+            await log.save();
+            await DeferredData.deleteMany({ user: log.user });
+            await PartialUpdateData.deleteMany({ user: log.user });
+
+            return res.status(200).json({ message: 'Form submitted successfully! Your information has been updated.', success: true });
+          } catch (fallbackErr) {
+            console.error('❌ Fallback non-transactional flow failed:', fallbackErr);
+            // Attempt to cleanup any pending record if possible
+            try { await UpdatedData.deleteOne({ user: log.user, status: 'pending' }); } catch (e) { /* ignore */ }
+            return res.status(500).json({ message: 'Unable to create user account. Please try again or contact support.', error: String(fallbackErr.message || fallbackErr) });
+          }
+        }
+
+        return res.status(500).json({ message: "Unable to create user account. Please try again or contact support.", error: prodErr.message });
+      }
+    } else {
+      // Fallback: non-transactional flow
+      try {
+        console.log(`📝 (Fallback) Creating UpdatedData record (pending) for ${cleanedData.email || cleanedData.phone}...`);
+        updatedData = await UpdatedData.create({ user: log.user, updatedData: cleanedData, submittedAt: new Date(), status: 'pending' });
+        console.log(`✅ (Fallback) UpdatedData (pending) created with ID: ${updatedData._id}`);
+
+        // Try to create user in production
+        console.log(`🚀 (Fallback) Creating user directly in production DB...`);
+        const result = await createUserInProduction(cleanedData, firebaseToken);
+
+        if (!result.success) {
+          // Cleanup the pending UpdatedData so retries are allowed
+          try {
+            await UpdatedData.deleteOne({ _id: updatedData._id });
+            console.log('🧹 (Fallback) Deleted pending UpdatedData due to createUser failure');
+          } catch (delErr) {
+            console.warn('Failed to delete pending UpdatedData after createUser failure:', delErr);
+          }
+          return res.status(409).json({ message: `User already exists: ${result.reason}`, userId: result.userId, existingUser: true });
+        }
+
+        console.log(`✅ (Fallback) User created in production DB: ${result.userId}`);
+
+        // Update updatedData with productionUserId and mark completed
+        updatedData.productionUserId = result.userId;
+        updatedData.status = 'completed';
+        await updatedData.save();
+
+      } catch (prodErr) {
+        console.error('❌ (Fallback) createUserInProduction failed:', prodErr);
+        // Cleanup pending UpdatedData if present
+        if (updatedData && updatedData._id) {
+          try { await UpdatedData.deleteOne({ _id: updatedData._id }); } catch (delErr) { console.warn('Failed to delete pending UpdatedData after error:', delErr); }
+        }
+        return res.status(500).json({ message: "Unable to create user account. Please try again or contact support.", error: prodErr.message });
+      }
     }
 
     // ✅ Mark token as used

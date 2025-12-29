@@ -116,10 +116,14 @@ const sendFormEmails = async (req, res) => {
         }
       }
 
-      // ✅ Rate limiting: pause every 10 emails to prevent SMTP throttling
-      if ((i + 1) % 10 === 0 && i < users.length - 1) {
-        console.log(`⏸️  Pausing for 1 second after ${i + 1} emails...`);
-        await delay(1000);
+      // ✅ Rate limiting: pause after every email to prevent SMTP throttling
+      // Configurable via EMAIL_DELAY_MS environment variable (default: 1500ms)
+      if (i < users.length - 1) {
+        const delayMs = parseInt(process.env.EMAIL_DELAY_MS) || 1500;
+        if ((i + 1) % 10 === 0) {
+          console.log(`⏸️  Progress: ${i + 1}/${users.length} emails sent...`);
+        }
+        await delay(delayMs);
       }
     }
 

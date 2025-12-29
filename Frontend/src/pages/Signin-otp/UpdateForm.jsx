@@ -140,6 +140,68 @@ const UpdateForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Prevent double submit
   const recaptchaCleanedUp = useRef(false); // ✅ Track recaptcha cleanup
   const recaptchaContainerIdRef = useRef(0); // ✅ Track unique container IDs
+  const recaptchaWidgetIdRef = useRef(null); // ✅ Track widget ID for proper cleanup
+
+  // ✅ Reusable reCAPTCHA cleanup function
+  const cleanupRecaptcha = async (aggressive = false) => {
+    console.log(`🧹 Cleaning up reCAPTCHA (aggressive: ${aggressive})...`);
+    
+    // Step 1: Clear Firebase RecaptchaVerifier
+    if (window.recaptchaVerifier) {
+      try {
+        await window.recaptchaVerifier.clear();
+        console.log('✓ Cleared recaptchaVerifier');
+      } catch (e) {
+        console.warn('Failed to clear recaptchaVerifier:', e);
+      }
+      delete window.recaptchaVerifier;
+      window.recaptchaVerifier = null;
+    }
+    
+    // Step 2: Reset ALL grecaptcha widgets aggressively
+    if (window.grecaptcha && window.grecaptcha.reset) {
+      try {
+        // Try to reset by widget ID first
+        if (recaptchaWidgetIdRef.current !== null) {
+          try {
+            window.grecaptcha.reset(recaptchaWidgetIdRef.current);
+            console.log(`✓ Reset grecaptcha widget ${recaptchaWidgetIdRef.current}`);
+          } catch (e) {
+            console.warn('Failed to reset specific widget:', e);
+          }
+        }
+        // Always try to reset without ID (resets all widgets)
+        try {
+          window.grecaptcha.reset();
+          console.log('✓ Reset all grecaptcha widgets');
+        } catch (e) {
+          console.warn('Failed to reset all widgets:', e);
+        }
+      } catch (e) {
+        console.warn('Failed to reset grecaptcha:', e);
+      }
+    }
+    recaptchaWidgetIdRef.current = null;
+    
+    // Step 3: Completely remove and recreate DOM container
+    const container = document.getElementById("recaptcha-container-update");
+    if (container) {
+      // Remove ALL content and event listeners
+      container.innerHTML = "";
+      container.textContent = "";
+      
+      // Remove all data attributes that grecaptcha might have added
+      Array.from(container.attributes).forEach(attr => {
+        if (attr.name.startsWith('data-')) {
+          container.removeAttribute(attr.name);
+        }
+      });
+      
+      console.log('✓ Cleared DOM container completely');
+    }
+    
+    recaptchaCleanedUp.current = true;
+  };
 
   // Form validation - check if all required fields are filled
   const isFormComplete = () => {
@@ -206,6 +268,23 @@ const UpdateForm = () => {
           setFormData(prev => ({ ...prev, ...parsedData }));
         } catch (e) {
           console.error("Failed to restore form data:", e);
+        }
+      }
+      
+      // ✅ Restore phone verification state
+      const savedPhoneVerification = sessionStorage.getItem("phoneVerificationState");
+      if (savedPhoneVerification) {
+        try {
+          const parsedPhoneData = JSON.parse(savedPhoneVerification);
+          setPhoneVerification(prev => ({
+            ...prev,
+            isVerified: parsedPhoneData.isVerified,
+            firebaseToken: parsedPhoneData.firebaseToken,
+            showOtpInput: false, // Hide OTP input since already verified
+          }));
+          console.log("✅ Restored phone verification state from sessionStorage");
+        } catch (e) {
+          console.error("Failed to restore phone verification:", e);
         }
       }
       
@@ -284,20 +363,7 @@ const UpdateForm = () => {
   // ✅ Clean up reCAPTCHA on component unmount
   useEffect(() => {
     return () => {
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-          console.log("reCAPTCHA cleaned up on unmount");
-        } catch (e) {
-          console.warn('Failed to clear recaptcha on unmount:', e);
-        }
-        window.recaptchaVerifier = null;
-      }
-      
-      const container = document.getElementById("recaptcha-container-update");
-      if (container) {
-        container.innerHTML = "";
-      }
+      cleanupRecaptcha(true); // Aggressive cleanup on unmount
     };
   }, []);
 
@@ -388,6 +454,37 @@ const UpdateForm = () => {
         error: "",
       });
       setFormData(prev => ({ ...prev, githubUrl: url }));
+    }
+  }, []);
+
+  // ✅ Restore phone verification from sessionStorage on mount
+  useEffect(() => {
+    const savedPhoneVerification = sessionStorage.getItem("phoneVerificationState");
+    if (savedPhoneVerification) {
+      try {
+        const parsedPhoneData = JSON.parse(savedPhoneVerification);
+        // Check if verification is still recent (within 1 hour)
+        const verifiedAt = new Date(parsedPhoneData.verifiedAt);
+        const now = new Date();
+        const ageInMs = now - verifiedAt;
+        const oneHourInMs = 60 * 60 * 1000;
+        
+        if (ageInMs < oneHourInMs) {
+          setPhoneVerification(prev => ({
+            ...prev,
+            isVerified: parsedPhoneData.isVerified,
+            firebaseToken: parsedPhoneData.firebaseToken,
+            showOtpInput: false,
+          }));
+          console.log("✅ Restored phone verification from sessionStorage on mount");
+        } else {
+          // Expired - clear it
+          sessionStorage.removeItem("phoneVerificationState");
+          console.log("⚠️ Phone verification expired, cleared from sessionStorage");
+        }
+      } catch (e) {
+        console.error("Failed to restore phone verification on mount:", e);
+      }
     }
   }, []);
 
@@ -514,6 +611,15 @@ const UpdateForm = () => {
       // Save form data and token before redirect
       sessionStorage.setItem("updateFormData", JSON.stringify(formData));
       sessionStorage.setItem("updateFormToken", token);
+      
+      // ✅ Save phone verification state if verified
+      if (phoneVerification.isVerified && phoneVerification.firebaseToken) {
+        sessionStorage.setItem("phoneVerificationState", JSON.stringify({
+          isVerified: true,
+          firebaseToken: phoneVerification.firebaseToken,
+          verifiedAt: new Date().toISOString(),
+        }));
+      }
       sessionStorage.setItem("oauthReturnPath", `/update-form?token=${token}`);
       
       setOauthInProgress(true);
@@ -569,21 +675,14 @@ const UpdateForm = () => {
           showOtpInput: false,
           otp: "",
           isProcessing: false,
+          firebaseToken: null,
         });
         
-        // ✅ Clean up any existing reCAPTCHA when phone changes
-        if (window.recaptchaVerifier) {
-          try {
-            window.recaptchaVerifier.clear();
-          } catch (e) {
-            console.warn('Failed to clear recaptcha on phone change:', e);
-          }
-          window.recaptchaVerifier = null;
-        }
-        const container = document.getElementById("recaptcha-container-update");
-        if (container) {
-          container.innerHTML = "";
-        }
+        // ✅ Clear from sessionStorage when phone changes
+        sessionStorage.removeItem("phoneVerificationState");
+        
+        // ✅ Clean up reCAPTCHA when phone changes
+        cleanupRecaptcha(false);
       }
       return;
     }
@@ -604,39 +703,48 @@ const UpdateForm = () => {
     if (timer > 0)
       return showAlert(`Please wait ${timer}s before resending OTP.`, "info");
 
+    // ✅ Prevent multiple rapid clicks
+    if (phoneVerification.isProcessing) {
+      console.log('⚠️ OTP request already in progress');
+      return;
+    }
+
     setPhoneVerification((p) => ({ ...p, isProcessing: true }));
 
     try {
-      // ✅ Clear existing verifier first
-      if (window.recaptchaVerifier) {
-        try {
-          await window.recaptchaVerifier.clear();
-          console.log("Cleared existing recaptchaVerifier");
-        } catch (e) {
-          console.warn('Failed to clear existing recaptcha:', e);
-        }
-        window.recaptchaVerifier = null;
-      }
+      // ✅ Use aggressive cleanup utility
+      await cleanupRecaptcha(true);
       
-      // ✅ Generate unique container ID to avoid "already rendered" error
+      // Generate unique container ID
       recaptchaContainerIdRef.current += 1;
       const uniqueContainerId = `recaptcha-container-update-${recaptchaContainerIdRef.current}`;
       
-      // ✅ Get or create container with unique ID
-      let container = document.getElementById("recaptcha-container-update");
-      if (container) {
-        // Clear old content
-        container.innerHTML = "";
-        // Create new div with unique ID inside
-        const newDiv = document.createElement('div');
-        newDiv.id = uniqueContainerId;
-        container.appendChild(newDiv);
+      // Recreate container
+      const container = document.getElementById("recaptcha-container-update");
+      if (!container) {
+        console.error('❌ recaptcha-container-update not found in DOM');
+        throw new Error('reCAPTCHA container not found');
       }
+      
+      // Create fresh inner div
+      const newDiv = document.createElement('div');
+      newDiv.id = uniqueContainerId;
+      newDiv.className = 'recaptcha-inner';
+      container.appendChild(newDiv);
 
-      // ✅ Wait for DOM update
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait for DOM to be ready
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Verify container exists
+      const targetContainer = document.getElementById(uniqueContainerId);
+      if (!targetContainer) {
+        throw new Error(`Container ${uniqueContainerId} not found after creation`);
+      }
+      
+      console.log(`✓ Created fresh container: ${uniqueContainerId}`);
 
-      // ✅ Create new RecaptchaVerifier with unique container ID
+      // Step 6: Create new RecaptchaVerifier with unique container
+      console.log('🔧 Creating new RecaptchaVerifier...');
       window.recaptchaVerifier = new RecaptchaVerifier(
         auth,
         uniqueContainerId,
@@ -647,9 +755,29 @@ const UpdateForm = () => {
         }
       );
 
-      // ✅ Render
-      await window.recaptchaVerifier.render();
-      console.log(`reCAPTCHA rendered successfully in ${uniqueContainerId}`);
+      // Step 7: Render and store widget ID (with additional error handling)
+      let widgetId;
+      try {
+        widgetId = await window.recaptchaVerifier.render();
+        recaptchaWidgetIdRef.current = widgetId;
+        console.log(`✅ reCAPTCHA rendered successfully in ${uniqueContainerId} (widget ID: ${widgetId})`);
+      } catch (renderError) {
+        // If render still fails, try one more time with complete reset
+        console.warn('⚠️ First render attempt failed, trying complete reset...', renderError);
+        
+        // Nuclear option: reload grecaptcha script
+        if (window.grecaptcha) {
+          delete window.grecaptcha;
+        }
+        
+        // Wait a bit longer
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Try to render again
+        widgetId = await window.recaptchaVerifier.render();
+        recaptchaWidgetIdRef.current = widgetId;
+        console.log(`✅ reCAPTCHA rendered successfully on retry (widget ID: ${widgetId})`);
+      }
 
       const e164Phone = `+91${phoneNumber}`;
       const confirmationResult = await signInWithPhoneNumber(
@@ -684,21 +812,7 @@ const UpdateForm = () => {
       showAlert(errorMsg, "error");
       
       // ✅ Clean up on error
-      const container = document.getElementById("recaptcha-container-update");
-      if (container) {
-        container.innerHTML = "";
-      }
-      
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-        } catch (e) {
-          console.warn('Failed to clear recaptchaVerifier:', e);
-        }
-        window.recaptchaVerifier = null;
-      }
-      
-      recaptchaCleanedUp.current = true;
+      await cleanupRecaptcha(true);
       
       setPhoneVerification((p) => ({ ...p, isProcessing: false }));
     }
@@ -728,23 +842,24 @@ const UpdateForm = () => {
 
       showAlert("Phone verified successfully!", "success");
 
-      setPhoneVerification({
+      const verifiedState = {
         ...phoneVerification,
         isVerified: true,
         isProcessing: false,
         firebaseToken, // ✅ Store token for form submission
-      });
+      };
+      
+      setPhoneVerification(verifiedState);
+      
+      // ✅ Save to sessionStorage to persist across OAuth redirects
+      sessionStorage.setItem("phoneVerificationState", JSON.stringify({
+        isVerified: true,
+        firebaseToken,
+        verifiedAt: new Date().toISOString(),
+      }));
       
       // ✅ Clean up recaptcha after successful verification
-      if (window.recaptchaVerifier) {
-        try {
-          await window.recaptchaVerifier.clear();
-          recaptchaCleanedUp.current = true;
-        } catch (e) {
-          console.warn('Failed to clear recaptchaVerifier:', e);
-        }
-        window.recaptchaVerifier = null;
-      }
+      await cleanupRecaptcha(false);
     } catch (err) {
       console.error("OTP verification failed:", err);
       
@@ -758,16 +873,9 @@ const UpdateForm = () => {
       
       showAlert(errorMsg, "error");
       
-      // ✅ Clear verifier to allow retry without invisible reCAPTCHA crashing
-      if (window.recaptchaVerifier) {
-        try {
-          await window.recaptchaVerifier.clear();
-          recaptchaCleanedUp.current = true;
-        } catch (e) {
-          console.warn('Failed to clear recaptchaVerifier:', e);
-        }
-        window.recaptchaVerifier = null;
-      }
+      // ✅ Clear verifier to allow retry
+      await cleanupRecaptcha(false);
+      
       setPhoneVerification((p) => ({ ...p, isProcessing: false }));
     }
   };
@@ -821,6 +929,12 @@ const UpdateForm = () => {
 
     if (!confirm.isConfirmed) return;
 
+    // ✅ Prevent multiple submissions
+    if (isSubmitting) {
+      console.log('⚠️ Submission already in progress');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -848,19 +962,29 @@ const UpdateForm = () => {
         firebaseToken: phoneVerification.firebaseToken, // ✅ Include Firebase token
       };
       
-      // ✅ Remove null/empty fields
+      // ✅ Remove null/empty fields (but keep token and firebaseToken)
+      const finalData = {};
       Object.keys(cleanedData).forEach(key => {
-        if (cleanedData[key] === null || cleanedData[key] === "") {
-          delete cleanedData[key];
+        // Always include token and firebaseToken
+        if (key === 'token' || key === 'firebaseToken') {
+          finalData[key] = cleanedData[key];
+        } else if (cleanedData[key] !== null && cleanedData[key] !== "") {
+          finalData[key] = cleanedData[key];
         }
       });
       
-      await submitForm(cleanedData);
+      // ✅ Debug logging
+      console.log('📤 Submitting form with keys:', Object.keys(finalData));
+      console.log('📤 Token:', finalData.token?.substring(0, 10) + '...');
+      console.log('📤 Firebase token:', finalData.firebaseToken?.substring(0, 20) + '...');
+      
+      await submitForm(finalData);
       await API.delete(`/form/partial/${token}`);
       
       sessionStorage.removeItem("updateFormData");
       sessionStorage.removeItem("updateFormToken");
       sessionStorage.removeItem("oauthReturnPath");
+      sessionStorage.removeItem("phoneVerificationState"); // ✅ Clear phone verification
       sessionStorage.removeItem("githubVerified");
       sessionStorage.removeItem("githubUsername");
       sessionStorage.removeItem("githubUrl");
