@@ -139,6 +139,7 @@ const UpdateForm = () => {
   const [showCustomOrg, setShowCustomOrg] = useState(false); // ✅ Add for custom org handling
   const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Prevent double submit
   const recaptchaCleanedUp = useRef(false); // ✅ Track recaptcha cleanup
+  const recaptchaContainerIdRef = useRef(0); // ✅ Track unique container IDs
 
   // Form validation - check if all required fields are filled
   const isFormComplete = () => {
@@ -606,10 +607,7 @@ const UpdateForm = () => {
     setPhoneVerification((p) => ({ ...p, isProcessing: true }));
 
     try {
-      // ✅ Comprehensive cleanup of any existing reCAPTCHA
-      const container = document.getElementById("recaptcha-container-update");
-      
-      // Clear existing verifier
+      // ✅ Clear existing verifier first
       if (window.recaptchaVerifier) {
         try {
           await window.recaptchaVerifier.clear();
@@ -620,18 +618,28 @@ const UpdateForm = () => {
         window.recaptchaVerifier = null;
       }
       
-      // Clear container
+      // ✅ Generate unique container ID to avoid "already rendered" error
+      recaptchaContainerIdRef.current += 1;
+      const uniqueContainerId = `recaptcha-container-update-${recaptchaContainerIdRef.current}`;
+      
+      // ✅ Get or create container with unique ID
+      let container = document.getElementById("recaptcha-container-update");
       if (container) {
+        // Clear old content
         container.innerHTML = "";
+        // Create new div with unique ID inside
+        const newDiv = document.createElement('div');
+        newDiv.id = uniqueContainerId;
+        container.appendChild(newDiv);
       }
 
-      // ✅ Wait longer to ensure Firebase/Google cleanup is complete
+      // ✅ Wait for DOM update
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // ✅ Create new RecaptchaVerifier
+      // ✅ Create new RecaptchaVerifier with unique container ID
       window.recaptchaVerifier = new RecaptchaVerifier(
         auth,
-        "recaptcha-container-update",
+        uniqueContainerId,
         {
           size: "invisible",
           callback: () => console.log("reCAPTCHA solved"),
@@ -639,43 +647,9 @@ const UpdateForm = () => {
         }
       );
 
-      // ✅ Render with error handling
-      try {
-        await window.recaptchaVerifier.render();
-        console.log("reCAPTCHA rendered successfully");
-      } catch (renderError) {
-        console.warn("reCAPTCHA render error:", renderError);
-        
-        // If render fails, do full cleanup and retry once
-        if (window.recaptchaVerifier) {
-          try {
-            await window.recaptchaVerifier.clear();
-          } catch (e) {
-            console.warn('Failed to clear after render error:', e);
-          }
-          window.recaptchaVerifier = null;
-        }
-        
-        if (container) {
-          container.innerHTML = "";
-        }
-        
-        // Wait and create a fresh one
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        window.recaptchaVerifier = new RecaptchaVerifier(
-          auth,
-          "recaptcha-container-update",
-          {
-            size: "invisible",
-            callback: () => console.log("reCAPTCHA solved"),
-            "expired-callback": () => console.warn("reCAPTCHA expired"),
-          }
-        );
-        
-        await window.recaptchaVerifier.render();
-        console.log("reCAPTCHA rendered successfully on retry");
-      }
+      // ✅ Render
+      await window.recaptchaVerifier.render();
+      console.log(`reCAPTCHA rendered successfully in ${uniqueContainerId}`);
 
       const e164Phone = `+91${phoneNumber}`;
       const confirmationResult = await signInWithPhoneNumber(
@@ -902,7 +876,20 @@ const UpdateForm = () => {
       showAlert("Form submitted successfully!", "success");
     } catch (err) {
       console.error("Submission error:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      
       const errorMessage = err.response?.data?.message || "Submission failed. Please try again.";
+      
+      // ✅ Handle 409 Conflict (user already exists)
+      if (err.response?.status === 409) {
+        const userId = err.response?.data?.userId;
+        showAlert(
+          `This account already exists${userId ? ` (User ID: ${userId})` : ''}. ${errorMessage}`,
+          "error"
+        );
+        return;
+      }
       
       // ✅ If phone conflict error, reset phone verification so user can change number
       if (errorMessage.includes("phone number") || errorMessage.includes("already registered")) {
@@ -911,6 +898,7 @@ const UpdateForm = () => {
           showOtpInput: false,
           otp: "",
           isProcessing: false,
+          firebaseToken: null,
         });
         showAlert(
           "This phone number is already registered with a different account. Please use a different number or verify with the correct account.",
@@ -1589,6 +1577,8 @@ const UpdateForm = () => {
                       ? `Resend in ${timer}s`
                       : phoneVerification.isProcessing
                       ? "Sending..."
+                      : phoneVerification.showOtpInput
+                      ? "Resend OTP"
                       : "Send OTP"}
                   </Button>
                   {phoneVerification.showOtpInput && (

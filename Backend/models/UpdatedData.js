@@ -34,7 +34,7 @@ const UpdatedDataSchema = new mongoose.Schema({
     },
     role: {
       type: String,
-      enum: ["Student", "Self", "Mentor", "Manager", "Program Coordinator"]
+      enum: ["Developer", "Mentor"]
     },
     githubId: String,
     githubUrl: String,

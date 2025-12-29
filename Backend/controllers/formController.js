@@ -42,8 +42,24 @@ const getProdUserModel = async () => {
 // ✅ Global phone normalization - consistent across all functions
 const normalizePhone = (num) => {
   if (!num) return '';
-  const cleaned = num.replace(/\D/g, '').replace(/^91/, '');
-  return cleaned.length === 10 ? `+91${cleaned}` : '';
+  const cleaned = num.replace(/\D/g, ''); // Remove non-digits
+  
+  // If it's 12 digits and starts with 91, remove the country code
+  if (cleaned.length === 12 && cleaned.startsWith('91')) {
+    return `+91${cleaned.substring(2)}`;
+  }
+  
+  // If it's 10 digits, add +91
+  if (cleaned.length === 10) {
+    return `+91${cleaned}`;
+  }
+  
+  // If it already has +91 prefix (13 chars total), return as is
+  if (String(num).startsWith('+91') && cleaned.length === 12) {
+    return `+91${cleaned.substring(2)}`;
+  }
+  
+  return '';
 };
 
 // ✅ Field validation constants
