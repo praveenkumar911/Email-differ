@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Nunito+Sans:wght@300;400;500;700&display=swap');
+
+/* Font Family Tokens */
+:root {
+  --font-family-headings: "Noto Sans", "Poppins", "Roboto", "Helvetica", "Arial", sans-serif;
+  --font-family-body: "Nunito Sans", "Poppins", "Roboto", "Helvetica", "Arial", sans-serif;
+}
+
+/* Body Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.MuiCard-root,
+.MuiDialog-paper,
+.MuiMenu-paper,
+.MuiPopover-paper,
+.MuiDrawer-paper {
+  background-color: #f9f9f9 !important;
+}
+
+
+
+/* Full Design Tokens & Font Sizes */
+:root {
+  /* Primary Colors */
+  --color-primary-blue: #007bff;
+  --color-primary-gold: #B99803;
+  --color-danger-red: #e41d1dff;
+
+  --item-active-bgcolor:#B99803;
+  --item-active-color:#ffffff;
+  --item-color:#000;
+
+  /* Status Colors */
+  --color-success-green: #43a047;
+  --color-success-green-alt: #4caf50;
+  --color-error-red: #e53935;
+  --color-error-red-alt: #f44336;
+  --color-neutral-gray: rgba(102, 101, 101, 0.85);
+
+  /* UI Colors */
+  --color-border-black: #000;
+  --color-shadow-black: #000;
+  --color-border-gray: #ccc;
+  --color-border-light-gray: #eee;
+
+  /* Rating Colors */
+  --color-star-filled: #fbc02d;
+  --color-star-empty: #e0e0e0;
+
+  /* Text Colors */
+  --color-text-white: #fff;
+  --color-text-black: #000;
+  --color-text-very-dark-gray: #222;
+  --color-text-dark-gray: #444;
+  --color-text-medium-gray: #555;
+
+  /* Background Colors */
+  --color-white: #fff;
+  --color-bg-off-white: #f9f9f9;
+  --color-bg-very-light-gray: #fafafa;
+  --color-bg-light-gray: #f5f5f5;
+  --color-bg-lighter-gray: #e0e0e0;
+  --color-bg-pink: #f9f2f7;
+
+  /* Shadow Colors */
+  --shadow-light: rgba(0, 0, 0, 0.1);
+
+  /* MUI Palette */
+  --mui-primary-light: #42a5f5;
+  --mui-primary-main: #1976d2;
+  --mui-primary-dark: #1565c0;
+  --mui-primary-contrastText: #ffffff;
+
+  --mui-secondary-light: #ba68c8;
+  --mui-secondary-main: #9c27b0;
+  --mui-secondary-dark: #7b1fa2;
+  --mui-secondary-contrastText: #ffffff;
+
+  --mui-error-main: #d32f2f;
+  --mui-warning-main: #ed6c02;
+  --mui-info-main: #0288d1;
+  --mui-success-main: #2e7d32;
+
+  --mui-text-primary: rgba(0, 0, 0, 0.87);
+  --mui-text-secondary: rgba(0, 0, 0, 0.6);
+  --mui-text-disabled: rgba(0, 0, 0, 0.38);
+
+  --mui-background-default: #ffffff;
+  --mui-background-paper: #ffffff;
+
+  /* --- GLOBAL FONT SIZES & WEIGHTS FOR TYPOGRAPHY VARIANTS --- */
+  --font-size-main-heading: 2rem;          /* AppBar/page titles */
+  --font-size-section-title: 1.35rem;      /* Card/section headers */
+  --font-size-card-title: 1.17rem;         /* Project/Dev names in cards */
+  --font-size-card-label: 1.0rem;         /* Labels in cards/stats */
+  --font-size-card-value: 0.9rem;         /* Stat/value text */
+  --font-size-side-section-title: 1.1rem;  /* Sidebar/section titles */
+  --font-size-table-title: 1.0rem;            /* Tab titles */
+  --font-size-table-label: 0.9rem;             /* Tab text */
+  --font-size-table-value: 0.9rem;           /* Tab values */
+  --font-size-filter-label: 0.92rem;       /* Filter/radio/switch label */
+  --font-size-notice: 1rem;                /* Notice/empty/error/loading */
+  --font-size-xs: 0.8rem;                  /* Captions, fine print */
+
+  --font-weight-hvy: 700;          /* MainHeadings, boldest */
+  --font-weight-bold: 600;         /* Section titles, CardTitle */
+  --font-weight-medium: 500;       /* Labels, tabs, side section, filters */
+  --font-weight-regular: 400;      /* Field value, normal text */
+  --font-weight-light: 300;        /* Optional, for lighter subtler text */
+
+  --ls-wide: 0.05em;
+  --text-uppercase: uppercase;
+}
+
+/* Responsive font-size scaling for all custom variants */
+@media (max-width: 900px) {
+  :root {
+    --font-size-main-heading: 1.5rem;
+    --font-size-section-title: 1.1rem;
+    --font-size-card-title: 1.01rem;
+    --font-size-card-label: 0.88rem;
+    --font-size-card-value: 0.91rem;
+    --font-size-side-section-title: 0.98rem;
+    --font-size-table-label: 0.93rem;
+    --font-size-filter-label: 0.82rem;
+    --font-size-notice: 0.93rem;
+    --font-size-xs: 0.73rem;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --font-size-main-heading: 1.2rem;
+    --font-size-section-title: 1rem;
+    --font-size-card-title: 0.9rem;
+    --font-size-card-label: 0.8rem;
+    --font-size-card-value: 0.85rem;
+    --font-size-side-section-title: 0.9rem;
+    --font-size-table-label: 0.85rem;
+    --font-size-filter-label: 0.74rem;
+    --font-size-notice: 0.85rem;
+    --font-size-xs: 0.68rem;
+  }
+}

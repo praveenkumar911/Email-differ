@@ -1,0 +1,55 @@
+.footer {
+  width: 100%;
+  background-image: url("../../assets/footer-background.png"); /* replace with actual path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: #000;
+}
+
+.footer-content {
+  text-align: center;
+}
+
+/* Social Icons */
+.footer-icons {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.footer-icons a {
+  color: black;
+  transition: color 0.3s ease;
+}
+
+.footer-icons a:hover {
+  color: #555;
+}
+
+/* Copyright */
+.footer p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .footer-icons {
+    font-size: 26px;
+    gap: 18px;
+  }
+
+  .footer p {
+    font-size: 12px;
+  }
+}

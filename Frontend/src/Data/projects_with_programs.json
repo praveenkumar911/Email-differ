@@ -1,0 +1,753 @@
+{
+  "Programs": [
+    {
+      "ProgramName": "Rural Healthcare Mission",
+      "Projects": [
+        {
+          "ProjectName": "Telemedicine platform for rural areas",
+          "shortDescription": "Telemedicine platform for rural areas aims to address challenges in Healthcare using modern technology.",
+          "Domain": "Healthcare",
+          "CreatedAt": "2021-01-01",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Telemedicine platform for rural areas.",
+              "CreationDate": "2020-06-10",
+              "Status": "opened",
+              "TechStack": ["Flask", "Pandas"]
+            },
+            {
+              "ModuleName": "Mobile App",
+              "Description": "This module is responsible for mobile app in the Telemedicine platform for rural areas.",
+              "CreationDate": "2021-03-23",
+              "Status": "closed",
+              "TechStack": ["React Native", "FastAPI"]
+            },
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Telemedicine platform for rural areas.",
+              "CreationDate": "2022-02-26",
+              "Status": "opened",
+              "TechStack": ["Django", "NumPy"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for backend api in the Telemedicine platform for rural areas.",
+              "CreationDate": "2024-10-07",
+              "Status": "opened",
+              "TechStack": ["Flask", "Scikit-learn"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Crop disease detection using AI",
+          "shortDescription": "Crop disease detection using AI aims to address challenges in Agriculture using modern technology.",
+          "Domain": "Agriculture",
+          "CreatedAt": "2023-11-10",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Crop disease detection using AI.",
+              "CreationDate": "2023-07-04",
+              "Status": "opened",
+              "TechStack": ["Docker", "FastAPI"]
+            },
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the Crop disease detection using AI.",
+              "CreationDate": "2023-12-30",
+              "Status": "opened",
+              "TechStack": ["Django", "Pandas"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Crop disease detection using AI.",
+              "CreationDate": "2022-12-11",
+              "Status": "opened",
+              "TechStack": ["React", "NumPy"]
+            },
+            {
+              "ModuleName": "Database Layer",
+              "Description": "This module is responsible for database layer in the Crop disease detection using AI.",
+              "CreationDate": "2023-08-09",
+              "Status": "opened",
+              "TechStack": ["PostgreSQL", "Django"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Smart traffic management system",
+          "shortDescription": "Smart traffic management system aims to address challenges in Transport using modern technology.",
+          "Domain": "Transport",
+          "CreatedAt": "2024-11-03",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the Smart traffic management system.",
+              "CreationDate": "2022-04-15",
+              "Status": "opened",
+              "TechStack": ["NumPy", "Flask"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Smart traffic management system.",
+              "CreationDate": "2021-07-21",
+              "Status": "opened",
+              "TechStack": ["Pandas", "Matplotlib"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Smart traffic management system.",
+              "CreationDate": "2022-07-30",
+              "Status": "closed",
+              "TechStack": ["Django", "Chart.js"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Smart traffic management system.",
+              "CreationDate": "2024-03-02",
+              "Status": "opened",
+              "TechStack": ["React", "D3.js"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Early warning system for floods",
+          "shortDescription": "Early warning system for floods aims to address challenges in Disaster Management using modern technology.",
+          "Domain": "Disaster Management",
+          "CreatedAt": "2022-01-26",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Early warning system for floods.",
+              "CreationDate": "2024-04-01",
+              "Status": "opened",
+              "TechStack": ["Flask", "Pandas"]
+            },
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the Early warning system for floods.",
+              "CreationDate": "2023-12-20",
+              "Status": "closed",
+              "TechStack": ["JWT", "NumPy"]
+            },
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Early warning system for floods.",
+              "CreationDate": "2020-01-31",
+              "Status": "closed",
+              "TechStack": ["Docker", "Kubernetes"]
+            },
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the Early warning system for floods.",
+              "CreationDate": "2021-01-15",
+              "Status": "closed",
+              "TechStack": ["Redis", "FastAPI"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Early warning system for floods.",
+              "CreationDate": "2024-07-14",
+              "Status": "closed",
+              "TechStack": ["Pandas", "Plotly"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Early warning system for floods.",
+              "CreationDate": "2020-01-15",
+              "Status": "closed",
+              "TechStack": ["Django", "Bootstrap"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Market Price Prediction",
+          "shortDescription": "Market Price Prediction aims to address challenges in Transport using modern Machine Learning and IoT-enabled solutions.",
+          "Domain": "Transport",
+          "CreatedAt": "2023-07-23",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Data Collection Module",
+              "Description": "This module is responsible for gathering transport and market-related data from IoT devices and external APIs for Market Price Prediction.",
+              "CreationDate": "2023-02-15",
+              "Status": "closed",
+              "TechStack": ["IoT", "Node.js"]
+            },
+            {
+              "ModuleName": "Prediction Engine",
+              "Description": "This module is responsible for implementing predictive models using Machine Learning and TensorFlow for accurate market price forecasting.",
+              "CreationDate": "2023-03-18",
+              "Status": "closed",
+              "TechStack": ["TensorFlow", "Machine Learning"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for exposing APIs to serve prediction results and manage transport-related data.",
+              "CreationDate": "2023-05-02",
+              "Status": "closed",
+              "TechStack": ["Node.js", "Express.js"]
+            },
+            {
+              "ModuleName": "Analytics Dashboard",
+              "Description": "This module provides an analytics dashboard for visualizing predictions, trends, and transport market insights.",
+              "CreationDate": "2023-06-10",
+              "Status": "closed",
+              "TechStack": ["React", "Node.js"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "AI Fraud Detection",
+          "shortDescription": "AI Fraud Detection focuses on improving Transport sector security by detecting fraudulent activities using advanced Machine Learning techniques.",
+          "Domain": "Transport",
+          "CreatedAt": "2020-01-18",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Data Ingestion Module",
+              "Description": "This module collects real-time data from IoT-enabled transport systems for fraud detection.",
+              "CreationDate": "2019-08-12",
+              "Status": "closed",
+              "TechStack": ["IoT", "Node.js"]
+            },
+            {
+              "ModuleName": "Fraud Detection Engine",
+              "Description": "This module leverages Machine Learning and TensorFlow models to detect unusual or fraudulent patterns in transport data.",
+              "CreationDate": "2019-10-05",
+              "Status": "closed",
+              "TechStack": ["TensorFlow", "Machine Learning"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for handling fraud alerts, storing incident logs, and integrating with external transport systems.",
+              "CreationDate": "2019-11-20",
+              "Status": "closed",
+              "TechStack": ["Node.js", "Express.js"]
+            },
+            {
+              "ModuleName": "Monitoring Dashboard",
+              "Description": "This module provides real-time monitoring and visualization of fraud detection insights for administrators and stakeholders.",
+              "CreationDate": "2020-01-05",
+              "Status": "closed",
+              "TechStack": ["React", "Node.js"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ProgramName": "Smart Agriculture Initiative",
+      "Projects": [
+        {
+          "ProjectName": "Community-based energy sharing app",
+          "shortDescription": "Community-based energy sharing app aims to address challenges in Energy using modern technology.",
+          "Domain": "Energy",
+          "CreatedAt": "2024-07-11",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the Community-based energy sharing app.",
+              "CreationDate": "2023-03-25",
+              "Status": "closed",
+              "TechStack": ["FastAPI", "JWT"]
+            },
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Community-based energy sharing app.",
+              "CreationDate": "2022-12-05",
+              "Status": "opened",
+              "TechStack": ["Django", "Redis"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Community-based energy sharing app.",
+              "CreationDate": "2022-06-24",
+              "Status": "closed",
+              "TechStack": ["React", "TensorFlow"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Community-based energy sharing app.",
+              "CreationDate": "2021-01-13",
+              "Status": "closed",
+              "TechStack": ["PyTorch", "Pandas"]
+            },
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Community-based energy sharing app.",
+              "CreationDate": "2020-07-20",
+              "Status": "opened",
+              "TechStack": ["Docker", "Jenkins"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Battery recycling tracking system",
+          "shortDescription": "Battery recycling tracking system aims to address challenges in Energy using modern technology.",
+          "Domain": "Energy",
+          "CreatedAt": "2020-06-27",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the Battery recycling tracking system.",
+              "CreationDate": "2022-01-06",
+              "Status": "closed",
+              "TechStack": ["Scikit-learn", "OAuth"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Battery recycling tracking system.",
+              "CreationDate": "2023-12-19",
+              "Status": "closed",
+              "TechStack": ["Flask", "Vue.js"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Battery recycling tracking system.",
+              "CreationDate": "2021-04-03",
+              "Status": "closed",
+              "TechStack": ["FastAPI", "Tableau"]
+            },
+            {
+              "ModuleName": "Mobile App",
+              "Description": "This module is responsible for mobile app in the Battery recycling tracking system.",
+              "CreationDate": "2021-05-02",
+              "Status": "closed",
+              "TechStack": ["Pandas", "Flutter"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Crop disease detection using AI",
+          "shortDescription": "Crop disease detection using AI aims to address challenges in Agriculture using modern technology.",
+          "Domain": "Agriculture",
+          "CreatedAt": "2021-07-07",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Crop disease detection using AI.",
+              "CreationDate": "2021-12-04",
+              "Status": "opened",
+              "TechStack": ["NumPy", "React"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Crop disease detection using AI.",
+              "CreationDate": "2020-02-02",
+              "Status": "opened",
+              "TechStack": ["PyTorch", "Django"]
+            },
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the Crop disease detection using AI.",
+              "CreationDate": "2023-12-30",
+              "Status": "opened",
+              "TechStack": ["FastAPI", "RabbitMQ"]
+            },
+            {
+              "ModuleName": "Database Layer",
+              "Description": "This module is responsible for database layer in the Crop disease detection using AI.",
+              "CreationDate": "2024-02-13",
+              "Status": "opened",
+              "TechStack": ["PostgreSQL", "SQLAlchemy"]
+            },
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Crop disease detection using AI.",
+              "CreationDate": "2020-10-03",
+              "Status": "closed",
+              "TechStack": ["Docker", "GitLab CI"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Crop disease detection using AI.",
+              "CreationDate": "2022-07-27",
+              "Status": "opened",
+              "TechStack": ["Pandas", "Matplotlib"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Telemedicine platform for rural areas",
+          "shortDescription": "Telemedicine platform for rural areas aims to address challenges in Healthcare using modern technology.",
+          "Domain": "Healthcare",
+          "CreatedAt": "2023-04-22",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for backend api in the Telemedicine platform for rural areas.",
+              "CreationDate": "2022-09-23",
+              "Status": "opened",
+              "TechStack": ["TensorFlow", "FastAPI"]
+            },
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Telemedicine platform for rural areas.",
+              "CreationDate": "2022-04-10",
+              "Status": "closed",
+              "TechStack": ["Pandas", "Docker"]
+            },
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Telemedicine platform for rural areas.",
+              "CreationDate": "2021-07-02",
+              "Status": "closed",
+              "TechStack": ["Apache Kafka", "Spring Boot"]
+            },
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the Telemedicine platform for rural areas.",
+              "CreationDate": "2022-10-25",
+              "Status": "closed",
+              "TechStack": ["OAuth 2.0", "JWT"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ProgramName": "Digital Learning Drive",
+      "Projects": [
+        {
+          "ProjectName": "Mental health support chatbot",
+          "shortDescription": "Mental health support chatbot aims to address challenges in Healthcare using modern technology.",
+          "Domain": "Healthcare",
+          "CreatedAt": "2022-02-20",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Mental health support chatbot.",
+              "CreationDate": "2022-05-31",
+              "Status": "closed",
+              "TechStack": ["Scikit-learn", "Apache Kafka"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Mental health support chatbot.",
+              "CreationDate": "2022-02-10",
+              "Status": "opened",
+              "TechStack": ["Flask", "React"]
+            },
+            {
+              "ModuleName": "Database Layer",
+              "Description": "This module is responsible for database layer in the Mental health support chatbot.",
+              "CreationDate": "2024-09-01",
+              "Status": "opened",
+              "TechStack": ["OpenCV", "MongoDB"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Flood Alert App",
+          "shortDescription": "AI-powered flood alert system aims to address challenges in Environment using modern technology.",
+          "Domain": "Environment",
+          "CreatedAt": "2020-05-14",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Mobile App",
+              "Description": "This module is responsible for mobile app in the AI-powered water conservation system.",
+              "CreationDate": "2020-11-26",
+              "Status": "opened",
+              "TechStack": ["FastAPI", "React Native"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the AI-powered water conservation system.",
+              "CreationDate": "2021-06-01",
+              "Status": "closed",
+              "TechStack": ["NumPy", "Vue.js"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for backend api in the AI-powered water conservation system.",
+              "CreationDate": "2021-08-22",
+              "Status": "opened",
+              "TechStack": ["Django", "TensorFlow"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Community-based energy sharing app",
+          "shortDescription": "Community-based energy sharing app aims to address challenges in Energy using modern technology.",
+          "Domain": "Energy",
+          "CreatedAt": "2023-02-17",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Community-based energy sharing app.",
+              "CreationDate": "2021-11-24",
+              "Status": "opened",
+              "TechStack": ["Flask", "Angular"]
+            },
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Community-based energy sharing app.",
+              "CreationDate": "2023-02-21",
+              "Status": "closed",
+              "TechStack": ["Pandas", "Jenkins"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Community-based energy sharing app.",
+              "CreationDate": "2022-02-18",
+              "Status": "opened",
+              "TechStack": ["Django", "Chart.js"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Battery recycling tracking system",
+          "shortDescription": "Battery recycling tracking system aims to address challenges in Energy using modern technology.",
+          "Domain": "Energy",
+          "CreatedAt": "2020-04-30",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Battery recycling tracking system.",
+              "CreationDate": "2023-01-10",
+              "Status": "closed",
+              "TechStack": ["Pandas", "Apache Camel"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Battery recycling tracking system.",
+              "CreationDate": "2023-07-14",
+              "Status": "opened",
+              "TechStack": ["Django", "React"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Battery recycling tracking system.",
+              "CreationDate": "2020-03-26",
+              "Status": "closed",
+              "TechStack": ["Scikit-learn", "Bootstrap"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Battery recycling tracking system.",
+              "CreationDate": "2020-07-11",
+              "Status": "closed",
+              "TechStack": ["TensorFlow", "D3.js"]
+            },
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the Battery recycling tracking system.",
+              "CreationDate": "2023-07-16",
+              "Status": "opened",
+              "TechStack": ["Redis", "Socket.IO"]
+            },
+            {
+              "ModuleName": "Database Layer",
+              "Description": "This module is responsible for database layer in the Battery recycling tracking system.",
+              "CreationDate": "2022-04-05",
+              "Status": "closed",
+              "TechStack": ["PostgreSQL", "Elasticsearch"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "AI-powered water conservation system",
+          "shortDescription": "AI-powered water conservation system aims to address challenges in Environment using modern technology.",
+          "Domain": "Environment",
+          "CreatedAt": "2021-09-17",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the AI-powered water conservation system.",
+              "CreationDate": "2023-10-18",
+              "Status": "opened",
+              "TechStack": ["Pandas", "Apache NiFi"]
+            },
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the AI-powered water conservation system.",
+              "CreationDate": "2021-12-14",
+              "Status": "closed",
+              "TechStack": ["NumPy", "OAuth 2.0"]
+            },
+            {
+              "ModuleName": "Database Layer",
+              "Description": "This module is responsible for database layer in the AI-powered water conservation system.",
+              "CreationDate": "2020-12-10",
+              "Status": "opened",
+              "TechStack": ["MongoDB", "Neo4j"]
+            },
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the AI-powered water conservation system.",
+              "CreationDate": "2023-01-15",
+              "Status": "closed",
+              "TechStack": ["Twilio", "Firebase"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for backend api in the AI-powered water conservation system.",
+              "CreationDate": "2023-03-14",
+              "Status": "opened",
+              "TechStack": ["FastAPI", "GraphQL"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the AI-powered water conservation system.",
+              "CreationDate": "2024-10-07",
+              "Status": "closed",
+              "TechStack": ["Tableau", "Apache Spark"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ProgramName": "Green Energy for All",
+      "Projects": [
+        {
+          "ProjectName": "Crop disease detection using AI",
+          "shortDescription": "Crop disease detection using AI aims to address challenges in Agriculture using modern technology.",
+          "Domain": "Agriculture",
+          "CreatedAt": "2024-11-09",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Integration Service",
+              "Description": "This module is responsible for integration service in the Crop disease detection using AI.",
+              "CreationDate": "2022-01-20",
+              "Status": "opened",
+              "TechStack": ["Pandas", "RabbitMQ"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for backend api in the Crop disease detection using AI.",
+              "CreationDate": "2021-03-04",
+              "Status": "closed",
+              "TechStack": ["Django", "REST Framework"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Crop disease detection using AI.",
+              "CreationDate": "2022-11-26",
+              "Status": "opened",
+              "TechStack": ["Flask", "Plotly"]
+            },
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the Crop disease detection using AI.",
+              "CreationDate": "2022-10-09",
+              "Status": "opened",
+              "TechStack": ["JWT", "bcrypt"]
+            },
+            {
+              "ModuleName": "Mobile App",
+              "Description": "This module is responsible for mobile app in the Crop disease detection using AI.",
+              "CreationDate": "2020-09-29",
+              "Status": "closed",
+              "TechStack": ["Flutter", "Dart"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Crop disease detection using AI.",
+              "CreationDate": "2021-04-13",
+              "Status": "opened",
+              "TechStack": ["Vue.js", "Vuetify"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "Open-source content distribution platform",
+          "shortDescription": "Open-source content distribution platform aims to address challenges in Education using modern technology.",
+          "Domain": "Education",
+          "CreatedAt": "2021-12-23",
+          "Status": "opened",
+          "Modules": [
+            {
+              "ModuleName": "Deployment & CI/CD",
+              "Description": "This module is responsible for deployment & ci/cd in the Open-source content distribution platform.",
+              "CreationDate": "2023-10-02",
+              "Status": "closed",
+              "TechStack": ["Flask", "Docker"]
+            },
+            {
+              "ModuleName": "Frontend UI",
+              "Description": "This module is responsible for frontend ui in the Open-source content distribution platform.",
+              "CreationDate": "2022-09-19",
+              "Status": "opened",
+              "TechStack": ["Pandas", "React"]
+            },
+            {
+              "ModuleName": "Analytics & Reporting",
+              "Description": "This module is responsible for analytics & reporting in the Open-source content distribution platform.",
+              "CreationDate": "2023-02-26",
+              "Status": "closed",
+              "TechStack": ["TensorFlow", "Kibana"]
+            },
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the Open-source content distribution platform.",
+              "CreationDate": "2023-08-18",
+              "Status": "closed",
+              "TechStack": ["PyTorch", "OAuth"]
+            },
+            {
+              "ModuleName": "Admin Dashboard",
+              "Description": "This module is responsible for admin dashboard in the Open-source content distribution platform.",
+              "CreationDate": "2020-05-12",
+              "Status": "closed",
+              "TechStack": ["Django", "Material-UI"]
+            }
+          ]
+        },
+        {
+          "ProjectName": "AI-powered smart grid management",
+          "shortDescription": "AI-powered smart grid management aims to address challenges in Energy using modern technology.",
+          "Domain": "Energy",
+          "CreatedAt": "2021-04-27",
+          "Status": "closed",
+          "Modules": [
+            {
+              "ModuleName": "Mobile App",
+              "Description": "This module is responsible for mobile app in the AI-powered smart grid management.",
+              "CreationDate": "2020-12-22",
+              "Status": "closed",
+              "TechStack": ["Django", "Ionic"]
+            },
+            {
+              "ModuleName": "Backend API",
+              "Description": "This module is responsible for backend api in the AI-powered smart grid management.",
+              "CreationDate": "2022-07-13",
+              "Status": "opened",
+              "TechStack": ["OpenCV", "FastAPI"]
+            },
+            {
+              "ModuleName": "Authentication & Security",
+              "Description": "This module is responsible for authentication & security in the AI-powered smart grid management.",
+              "CreationDate": "2024-04-08",
+              "Status": "closed",
+              "TechStack": ["Pandas", "Keycloak"]
+            },
+            {
+              "ModuleName": "Notification System",
+              "Description": "This module is responsible for notification system in the AI-powered smart grid management.",
+              "CreationDate": "2023-03-29",
+              "Status": "closed",
+              "TechStack": ["WebSocket", "Node.js"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

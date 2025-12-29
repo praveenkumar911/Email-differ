@@ -1,0 +1,28 @@
+/* Shake animation */
+.verify-shake {
+  animation: shake 0.35s ease-in-out;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0px); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0px); }
+}
+
+/* Fade red error box */
+.verify-error {
+  animation: fadeError 0.4s ease forwards;
+}
+
+@keyframes fadeError {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

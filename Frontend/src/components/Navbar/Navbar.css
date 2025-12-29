@@ -1,0 +1,286 @@
+/* ---------------- Base Navbar ---------------- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 10px 20px;
+  color: #000;
+  z-index: 1100;
+  box-sizing: border-box;
+  border-bottom: 2px solid rgb(185, 152, 3);
+}
+
+.navbar-left,
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 40px;
+  /* margin-right: 10px; */
+  width: auto;
+}
+
+/* ---------------- Center Navigation ---------------- */
+.navbar-center {
+  display: flex;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.navbar-center a {
+  color: #000;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  padding: 5px 10px;
+}
+
+.navbar-center a:hover {
+  background: var(--item-active-bgcolor);
+  color: var(--item-active-color);
+}
+
+.nav-item.active {
+  background: var(--item-active-bgcolor);
+  color: var(--item-active-color);
+}
+
+.nav-dropdown-link.active {
+  background: var(--item-active-bgcolor);
+  color: var(--item-active-color);
+}
+
+/* ---------------- Profile ---------------- */
+.profile-icon {
+  height: 35px;
+  width: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-name {
+  font-weight: bold;
+  padding: 0 10px;
+}
+
+.navbar-right {
+  background: #e0e0e0;
+  border-radius: 20px;
+  padding: 3px;
+}
+
+.signin-btn {
+  text-decoration: none;
+  color: #000;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.profile-section:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.profile-section .profile-icon:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+
+/* ---------------- Hamburger ---------------- */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: #000;
+  margin: 3px 0;
+  border-radius: 2px;
+  transition: 0.3s;
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: rotate(-45deg) translate(-5px, 6px);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: rotate(45deg) translate(-5px, -6px);
+}
+
+/* ---------------- Dropdown ---------------- */
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropdown-link {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dropdown-arrow {
+  font-size: 0.7em;
+  margin-left: 3px;
+}
+
+/* Submenu */
+.nav-submenu {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: max-content;
+  min-width: unset; 
+  max-width: 90vw;  
+  max-height: 500px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 6px;
+  z-index: 1200;
+  flex-direction: column;
+  padding: 8px 0;
+  overflow-y: auto;     /* 👈 scroll still works */
+  scrollbar-width: none; 
+}
+
+.nav-submenu::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-submenu a {
+  color: #222;
+  padding: 10px 18px;
+  text-decoration: none;
+  display: block;
+  font-weight: 400;
+  transition: background 0.2s;
+}
+
+.nav-submenu a:hover {
+  background: var(--item-active-bgcolor);
+  color: var(--item-active-color);
+}
+
+.nav-submenu.open {
+  display: flex;
+}
+
+/* Submenu section headers */
+.submenu-section {
+  padding: 6px 10px;
+}
+
+.submenu-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 4px 0;
+  color: #444;
+  border-bottom: 1px solid #eee;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+    margin-left: 5px;
+  }
+
+  .navbar-left {
+    flex: 1;
+  }
+
+  .navbar-center {
+    position: absolute;
+    top: 65px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: #fff;
+    gap: 10px;
+    padding: 15px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-10px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    max-height: 100vh;       /* ensures menu fills screen */
+    overflow-y: auto;        /* scroll inside menu if needed */
+  }
+
+  .navbar-center.open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .navbar-center a {
+    /* display: block; */
+    padding: 8px;
+  }
+
+  .navbar-right {
+    position: relative;
+    z-index: 1101;
+  }
+
+  .nav-dropdown {
+    width: 100%;
+  }
+
+  .nav-dropdown-link {
+    width: 100%;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .nav-submenu {
+    position: static;
+    box-shadow: none;
+    border-radius: 0;
+    background: #fafafa;
+    margin-left: 10px;
+    min-width: auto;
+    max-width: 100vw;
+  }
+
+  .nav-submenu a {
+    padding: 10px 20px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .logo {
+    height: 35px;
+  }
+
+  .profile-name {
+    display: none;
+  }
+
+  .navbar-right {
+    padding: 5px 10px;
+    border-radius: 15px;
+  }
+}
+
+/* ---------------- Prevent body scroll when menu open ---------------- */
+body.menu-open {
+  overflow: hidden;
+}

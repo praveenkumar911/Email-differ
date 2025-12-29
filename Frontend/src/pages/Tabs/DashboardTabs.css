@@ -1,0 +1,18 @@
+.dashboard-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+
+.tab-content {
+  flex-grow: 1;
+  height: calc(100vh); /* adjust based on navbar height */
+}
+
+.tab-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Adam Smith",
+  "email": "adam.smith@email.com",
+  "phoneCode": "91",
+  "phoneNumber": "1234567890",
+  "organisation": "RCTS",
+  "orgType": "Company",
+  "role": "Developer",
+  "githubId": "adam.smith",
+  "discordId": "adam.smith",
+  "profileImage": "https://picsum.photos/200"
+}

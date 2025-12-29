@@ -1,0 +1,20 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.app-layout {
+  /* min-height: 100vh; */
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  background-color: #f9f9f9;
+  overflow-y: hidden;   /* prevent double scroll */
+  display: flex;        /* ✅ allows sidebar + content */
+  margin-top: 60px;   /* height of Navbar */
+}

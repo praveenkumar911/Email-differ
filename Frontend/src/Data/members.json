@@ -1,0 +1,410 @@
+{
+  "programs": [
+    {
+      "program_name": "Education For All",
+      "members": [
+        {
+          "memberName": "Varun Joshi",
+          "Affiliation": "IIT Delhi",
+          "contact": "varun.joshi@edu.iitd.ac.in",
+          "Type": "student",
+          "Ranking": "green",
+          "completedTasks": 2,
+          "PR_merged": 1,
+          "Tech skills": ["Python", "Machine Learning", "Flask", "Django"],
+          "projects": [
+            {
+              "projectName": "Adaptive Learning Platform",
+              "Description": "AI-powered learning solution for rural schools.",
+              "creationDate": "2025-04-12",
+              "Domain": "fintech",
+              "Techskillsdemonstarted": ["Python", "Machine Learning"],
+              "Task status": "completed"
+            },
+            {
+              "projectName": "Microloans Tracker",
+              "Description": "Web app for tracking microloans.",
+              "creationDate": "2025-04-02",
+              "Domain": "fintech",
+              "Techskillsdemonstarted": ["Python", "Django"],
+              "Task status": "completed"
+            },
+            {
+              "projectName": "Online Tutorial Library",
+              "Description": "Digital repository for open-source educational materials.",
+              "creationDate": "2025-02-14",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["python", "Machine Learning"],
+              "Task status": "ongoing"
+            }
+          ]
+        },
+        {
+          "memberName": "Megha Reddy",
+          "Affiliation": "NIT Warangal",
+          "contact": "megha.reddy@nitt.edu",
+          "Type": "student",
+          "Ranking": "red",
+          "completedTasks": 1,
+          "PR_merged": 0,
+          "Tech skills": ["Java", "Angular", "MySQL"],
+          "projects": [
+            {
+              "projectName": "Online Tutorial Library",
+              "Description": "Digital repository for open-source educational materials.",
+              "creationDate": "2025-02-14",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["Java", "MySQL"],
+              "Task status": "ongoing"
+            }
+          ]
+        },
+        {
+          "memberName": "Kunal Saxena",
+          "Affiliation": "Wipro",
+          "contact": "kunal.saxena@wipro.com",
+          "Type": "professional",
+          "Ranking": "green",
+          "completedTasks": 6,
+          "PR_merged": 4,
+          "Tech skills": ["Node.js", "Express", "MongoDB"],
+          "projects": [
+            {
+              "projectName": "Remote Learning Tracker",
+              "Description": "Tool to monitor learning progress in remote regions.",
+              "creationDate": "2025-03-11",
+              "Domain": "fintech",
+              "Techskillsdemonstarted": ["Node.js", "MongoDB"],
+              "Task status": "PR merged"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "program_name": "Healthcare Outreach",
+      "members": [
+        {
+          "memberName": "Sanjana Singh",
+          "Affiliation": "IIIT Hyderabad",
+          "contact": "sanjana.singh@iiit.ac.in",
+          "Type": "student",
+          "Ranking": "red",
+          "completedTasks": 2,
+          "PR_merged": 1,
+          "Tech skills": ["C++", "IoT"],
+          "projects": [
+            {
+              "projectName": "Telemedicine App",
+              "Description": "Video consultation platform for doctors and patients.",
+              "creationDate": "2025-01-10",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["C++", "IoT"],
+              "Task status": "completed"
+            }
+          ]
+        },
+        {
+          "memberName": "Abhishek Sinha",
+          "Affiliation": "Tech Mahindra",
+          "contact": "abhishek.sinha@techmahindra.com",
+          "Type": "professional",
+          "Ranking": "green",
+          "completedTasks": 8,
+          "PR_merged": 5,
+          "Tech skills": ["Java", "REST API"],
+          "projects": [
+            {
+              "projectName": "Health Record Integration",
+              "Description": "Unified patient health record platform.",
+              "creationDate": "2025-06-17",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["Java", "REST API"],
+              "Task status": "completed"
+            }
+          ]
+        },
+        {
+          "memberName": "Anjali Shah",
+          "Affiliation": "NIT Surathkal",
+          "contact": "anjali.shah@nits.ac.in",
+          "Type": "student",
+          "Ranking": "green",
+          "completedTasks": 4,
+          "PR_merged": 3,
+          "Tech skills": ["React", "Python"],
+          "projects": [
+            {
+              "projectName": "Rural Health Analytics",
+              "Description": "Analytics for tracking rural health data.",
+              "creationDate": "2025-03-28",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["Python", "React"],
+              "Task status": "ongoing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "program_name": "Smart Agriculture",
+      "members": [
+        {
+          "memberName": "Arjun Mehta",
+          "Affiliation": "Mindtree",
+          "contact": "arjun.mehta@mindtree.com",
+          "Type": "professional",
+          "Ranking": "red",
+          "completedTasks": 5,
+          "PR_merged": 3,
+          "Tech skills": ["Python", "IoT"],
+          "projects": [
+            {
+              "projectName": "Soil Sensor Project",
+              "Description": "Sensors for soil health monitoring.",
+              "creationDate": "2025-02-22",
+              "Domain": "agriculture",
+              "Techskillsdemonstarted": ["Python", "IoT"],
+              "Task status": "PR merged"
+            }
+          ]
+        },
+        {
+          "memberName": "Shruti Patel",
+          "Affiliation": "IIT Madras",
+          "contact": "shruti.patel@iitm.ac.in",
+          "Type": "student",
+          "Ranking": "green",
+          "completedTasks": 3,
+          "PR_merged": 2,
+          "Tech skills": ["R", "Python"],
+          "projects": [
+            {
+              "projectName": "Crop Yield Prediction",
+              "Description": "Statistical model for yield forecasting.",
+              "creationDate": "2025-05-15",
+              "Domain": "agriculture",
+              "Techskillsdemonstarted": ["R", "Python"],
+              "Task status": "completed"
+            }
+          ]
+        },
+        {
+          "memberName": "Neha Kumari",
+          "Affiliation": "HCL Technologies",
+          "contact": "neha.kumari@hcl.com",
+          "Type": "professional",
+          "Ranking": "red",
+          "completedTasks": 7,
+          "PR_merged": 4,
+          "Tech skills": ["Java", "Spring"],
+          "projects": [
+            {
+              "projectName": "Irrigation Automation",
+              "Description": "Automated irrigation based on sensor inputs.",
+              "creationDate": "2025-07-01",
+              "Domain": "agriculture",
+              "Techskillsdemonstarted": ["Java", "Spring"],
+              "Task status": "ongoing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "program_name": "Financial Literacy",
+      "members": [
+        {
+          "memberName": "Nitin Rao",
+          "Affiliation": "IIIT Bangalore",
+          "contact": "nitin.rao@iiitb.ac.in",
+          "Type": "student",
+          "Ranking": "green",
+          "completedTasks": 5,
+          "PR_merged": 2,
+          "Tech skills": ["Python", "Django"],
+          "projects": [
+            {
+              "projectName": "Microloans Tracker",
+              "Description": "Web app for tracking microloans.",
+              "creationDate": "2025-04-02",
+              "Domain": "fintech",
+              "Techskillsdemonstarted": ["Python", "Django"],
+              "Task status": "completed"
+            }
+          ]
+        },
+        {
+          "memberName": "Riya Sharma",
+          "Affiliation": "Accenture",
+          "contact": "riya.sharma@accenture.com",
+          "Type": "professional",
+          "Ranking": "red",
+          "completedTasks": 6,
+          "PR_merged": 3,
+          "Tech skills": ["Tableau", "SQL"],
+          "projects": [
+            {
+              "projectName": "Financial Awareness Dashboard",
+              "Description": "Dashboard for financial awareness campaigns.",
+              "creationDate": "2025-08-11",
+              "Domain": "fintech",
+              "Techskillsdemonstarted": ["Tableau", "SQL"],
+              "Task status": "ongoing"
+            }
+          ]
+        },
+        {
+          "memberName": "Dhruv Jain",
+          "Affiliation": "IIT Kanpur",
+          "contact": "dhruv.jain@iitk.ac.in",
+          "Type": "student",
+          "Ranking": "green",
+          "completedTasks": 4,
+          "PR_merged": 1,
+          "Tech skills": ["Python", "Flask"],
+          "projects": [
+            {
+              "projectName": "Budget Planner App",
+              "Description": "An app to help users manage budgets.",
+              "creationDate": "2025-05-17",
+              "Domain": "fintech",
+              "Techskillsdemonstarted": ["Python", "Flask"],
+              "Task status": "PR merged"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "program_name": "Women Safety Program",
+      "members": [
+        {
+          "memberName": "Aarti Desai",
+          "Affiliation": "TCS",
+          "contact": "aarti.desai@tcs.com",
+          "Type": "professional",
+          "Ranking": "green",
+          "completedTasks": 7,
+          "PR_merged": 5,
+          "Tech skills": ["Android", "Java"],
+          "projects": [
+            {
+              "projectName": "Safety Alert App",
+              "Description": "Mobile application to send emergency alerts.",
+              "creationDate": "2025-02-20",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["Android", "Java"],
+              "Task status": "completed"
+            }
+          ]
+        },
+        {
+          "memberName": "Harsh Jain",
+          "Affiliation": "NIT Calicut",
+          "contact": "harsh.jain@nitc.ac.in",
+          "Type": "student",
+          "Ranking": "red",
+          "completedTasks": 2,
+          "PR_merged": 1,
+          "Tech skills": ["Python", "REST API"],
+          "projects": [
+            {
+              "projectName": "Incident Reporting Tool",
+              "Description": "Tool for anonymous reporting of incidents.",
+              "creationDate": "2025-01-25",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["Python", "REST API"],
+              "Task status": "ongoing"
+            }
+          ]
+        },
+        {
+          "memberName": "Nikhil Kapoor",
+          "Affiliation": "Infosys",
+          "contact": "nikhil.kapoor@infosys.com",
+          "Type": "professional",
+          "Ranking": "green",
+          "completedTasks": 9,
+          "PR_merged": 6,
+          "Tech skills": ["React Native", "Node.js"],
+          "projects": [
+            {
+              "projectName": "Women Safety Analytics",
+              "Description": "Analytics platform for community safety.",
+              "creationDate": "2025-03-19",
+              "Domain": "healthcare",
+              "Techskillsdemonstarted": ["React Native", "Node.js"],
+              "Task status": "PR merged"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "program_name": "Green Initiative",
+      "members": [
+        {
+          "memberName": "Ishita Prasad",
+          "Affiliation": "IIT Roorkee",
+          "contact": "ishita.prasad@iitr.ac.in",
+          "Type": "student",
+          "Ranking": "green",
+          "completedTasks": 5,
+          "PR_merged": 3,
+          "Tech skills": ["Python", "Data Analysis"],
+          "projects": [
+            {
+              "projectName": "Carbon Footprint Calculator",
+              "Description": "Tool to calculate carbon footprint for communities.",
+              "creationDate": "2025-06-23",
+              "Domain": "agriculture",
+              "Techskillsdemonstarted": ["Python", "Data Analysis"],
+              "Task status": "completed"
+            }
+          ]
+        },
+        {
+          "memberName": "Vaibhav Agarwal",
+          "Affiliation": "IIIT Delhi",
+          "contact": "vaibhav.agarwal@iiitd.ac.in",
+          "Type": "student",
+          "Ranking": "red",
+          "completedTasks": 1,
+          "PR_merged": 0,
+          "Tech skills": ["JavaScript", "React"],
+          "projects": [
+            {
+              "projectName": "Green Map Initiative",
+              "Description": "Mapping green spaces in urban areas.",
+              "creationDate": "2025-04-27",
+              "Domain": "agriculture",
+              "Techskillsdemonstarted": ["JavaScript", "React"],
+              "Task status": "ongoing"
+            }
+          ]
+        },
+        {
+          "memberName": "Priya Sharma",
+          "Affiliation": "Cognizant",
+          "contact": "priya.sharma@cognizant.com",
+          "Type": "professional",
+          "Ranking": "green",
+          "completedTasks": 7,
+          "PR_merged": 4,
+          "Tech skills": ["Java", "Spring Boot"],
+          "projects": [
+            {
+              "projectName": "Waste Management System",
+              "Description": "System to monitor and manage waste disposal.",
+              "creationDate": "2025-07-05",
+              "Domain": "agriculture",
+              "Techskillsdemonstarted": ["Java", "Spring Boot"],
+              "Task status": "completed"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[90m2025-12-26 17:39:50[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534936[39m
+[90m2025-12-26 17:39:50[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534936[39m
+[90m2025-12-26 17:39:52[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:39:52[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:42:07[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:42:08[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:43:14[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:43:14[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:43:27[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:43:28[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 17:43:51[39m | [34minfo[39m | [33mEndpoint: /api/users/signup[39m | [35mRequested method: POST[39m | [37mSignup successful[39m | [32mPhoneNumber: 9398534935[39m | [1mMore info: {[22m
+[1m  "userId": "U006",[22m
+[1m  "email": "Governmentasasd@gmail.com",[22m
+[1m  "role": "R002"[22m
+[1m}[22m
+[90m2025-12-26 18:44:23[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 18:44:23[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 18:44:59[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 18:44:59[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 18:45:07[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [35mRequested method: POST[39m | [37mOTP request received[39m | [36mRequest by ::1[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 18:45:07[39m | [34minfo[39m | [33mEndpoint: /api/users/request-otp[39m | [37mUser not found. Proceeding with signup and Firebase OTP verification.[39m | [32mPhoneNumber: 9398534935[39m
+[90m2025-12-26 18:45:27[39m | [34minfo[39m | [33mEndpoint: /api/users/signup[39m | [35mRequested method: POST[39m | [37mSignup successful[39m | [32mPhoneNumber: 9398534935[39m | [1mMore info: {[22m
+[1m  "userId": "U006",[22m
+[1m  "email": "Self@gmai.",[22m
+[1m  "role": "R005"[22m
+[1m}[22m
