@@ -8,7 +8,7 @@ import reportWebVitals from './reportWebVitals';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter basename="/rcts/account-setup">
+    <BrowserRouter basename="/rcts/codeforgovtech">
       <App />
     </BrowserRouter>
   </React.StrictMode>

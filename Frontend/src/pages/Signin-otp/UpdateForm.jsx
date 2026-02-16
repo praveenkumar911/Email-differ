@@ -30,12 +30,36 @@ import {
   Stack,
   Divider,
   Autocomplete,
+  Fade,
 } from "@mui/material";
+import { keyframes } from "@mui/system";
 import { MuiTelInput } from 'mui-tel-input';
 import { parsePhoneNumber, isValidPhoneFormat } from "../../utils/phoneUtils";
 import logo1 from "../../assets/badal_logo.png";
 import logo2 from "../../assets/c4gt_logo.png";
+import {
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiXCircle,
+  FiClock,
+  FiLink,
+  FiMail,
+  FiSave,
+  FiLock,
+  FiInfo,
+  FiSlash,
+  FiUserCheck
+} from "react-icons/fi";
 
+// ✅ Shake animation for skill limit
+const shake = keyframes`
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+`;
 
 // ✅ Role List (matching SignUpPage)
 const ROLES = [
@@ -76,9 +100,10 @@ const githubRegex = /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_-]+\/?$/;
 // eslint-disable-next-line no-unused-vars
 const linkedinRegex = /^https:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+\/?$/;
 
-const DISCORD_REDIRECT = "https://pl-app.iiit.ac.in/rcts/account-setup/discord-callback";
+ const DISCORD_REDIRECT = "https://pl-app.iiit.ac.in/rcts/account-setup/discord-callback";
+// const DISCORD_INVITE = "https://discord.gg/BsbzbUHz";
+//const DISCORD_REDIRECT = "http://127.0.0.1:3000/rcts/codeforgovtech/discord-callback";
 const DISCORD_INVITE = "https://discord.gg/BsbzbUHz";
-
 // ✅ Generate OAuth state for CSRF protection
 const generateOAuthState = () => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -94,6 +119,8 @@ const DISCORD_OAUTH = (state) =>
   "&state=" + encodeURIComponent(state);
 
 // LinkedIn OAuth removed: collecting URL via input field instead
+
+
 
 const UpdateForm = () => {
   const [searchParams] = useSearchParams();
@@ -141,6 +168,7 @@ const UpdateForm = () => {
   const recaptchaCleanedUp = useRef(false); // ✅ Track recaptcha cleanup
   const recaptchaContainerIdRef = useRef(0); // ✅ Track unique container IDs
   const recaptchaWidgetIdRef = useRef(null); // ✅ Track widget ID for proper cleanup
+  const [shakeSkills, setShakeSkills] = useState(false); // ✅ Shake animation state
 
   // ✅ Reusable reCAPTCHA cleanup function
   const cleanupRecaptcha = async (aggressive = false) => {
@@ -1174,9 +1202,12 @@ const UpdateForm = () => {
             textAlign: "center",
           }}
         >
-          <Typography variant="h5" color="error" fontWeight="bold" gutterBottom>
-            ❌ Invalid or Expired Link
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+            <FiXCircle size={28} color="#d32f2f" />
+            <Typography variant="h5" color="error" fontWeight="bold">
+              Invalid or Expired Link
+            </Typography>
+          </Box>
           <Typography variant="body1" sx={{ mb: 2 }}>
             {errorMessage || "This link is no longer valid."}
           </Typography>
@@ -1185,33 +1216,54 @@ const UpdateForm = () => {
             What happened?
           </Typography>
           <Box sx={{ textAlign: "left", mx: 3, my: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              🔗 The link may have already been used
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              ⏰ The link may have expired (7 days validity)
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              ✅ You may have already submitted the form
-            </Typography>
-            <Typography variant="body2">
-              🚫 You may have opted out or deferred
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiLink size={16} color="#1976d2" />
+              <Typography variant="body2">
+                The link may have already been used
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiClock size={16} color="#ed6c02" />
+              <Typography variant="body2">
+                The link may have expired 
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiCheckCircle size={16} color="#2e7d32" />
+              <Typography variant="body2">
+                You may have already submitted the form
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FiSlash size={16} color="#d32f2f" />
+              <Typography variant="body2">
+                You may have opted out or deferred
+              </Typography>
+            </Box>
           </Box>
           <Divider sx={{ my: 2 }} />
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             What to do next?
           </Typography>
           <Box sx={{ textAlign: "left", mx: 3, my: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              📧 Check your email for the latest update form link
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              ⏳ Wait for the next reminder email (sent automatically)
-            </Typography>
-            <Typography variant="body2">
-              ✉️ Contact support if you believe this is an error
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiMail size={16} color="#1976d2" />
+              <Typography variant="body2">
+                Check your email for the latest update form link
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiClock size={16} color="#ed6c02" />
+              <Typography variant="body2">
+                Wait for the next reminder email (sent automatically)
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FiMail size={16} color="#1976d2" />
+              <Typography variant="body2">
+                Contact support if you believe this is an error
+              </Typography>
+            </Box>
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
             You can close this window now.
@@ -1241,9 +1293,12 @@ const UpdateForm = () => {
             textAlign: "center",
           }}
         >
-          <Typography variant="h5" color="warning.main" fontWeight="bold" gutterBottom>
-            ⏰ Form Expired
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+            <FiClock size={28} color="#ed6c02" />
+            <Typography variant="h5" color="warning.main" fontWeight="bold">
+              Form Expired
+            </Typography>
+          </Box>
           <Typography variant="body1" sx={{ mb: 2 }}>
             Your 10-minute session has expired.
           </Typography>
@@ -1252,18 +1307,30 @@ const UpdateForm = () => {
             What happens next?
           </Typography>
           <Box sx={{ textAlign: "left", mx: 3, my: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              ✉️ You will receive a new reminder email within 24 hours
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              🔗 Use the new link to complete your form
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              💾 Your progress has been saved automatically
-            </Typography>
-            <Typography variant="body2">
-              ⏱️ You'll have another 10 minutes when you return
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiMail size={16} color="#1976d2" />
+              <Typography variant="body2">
+                You will receive a new reminder email within 24 hours
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiLink size={16} color="#1976d2" />
+              <Typography variant="body2">
+                Use the new link to complete your form
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiSave size={16} color="#2e7d32" />
+              <Typography variant="body2">
+                Your progress has been saved automatically
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FiClock size={16} color="#ed6c02" />
+              <Typography variant="body2">
+                You'll have another 10 minutes when you return
+              </Typography>
+            </Box>
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
             You can close this window now.
@@ -1293,41 +1360,88 @@ const UpdateForm = () => {
             textAlign: "center",
           }}
         >
-          <Typography variant="h5" color="success.main" fontWeight="bold" gutterBottom>
-            ✅ Form Already Submitted
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            You have already submitted this form successfully.
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+            <FiCheckCircle size={28} color="#2e7d32" />
+            <Typography variant="h5" color="success.main" fontWeight="bold">
+              Form Submitted
+            </Typography>
+          </Box>
+          
           <Divider sx={{ my: 2 }} />
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             What happened?
           </Typography>
           <Box sx={{ textAlign: "left", mx: 3, my: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              ✅ Your form submission was completed successfully
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              💾 Your information has been saved in our system
-            </Typography>
-            <Typography variant="body2">
-              🔒 This link can no longer be used to prevent duplicate submissions
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiCheckCircle size={16} color="#2e7d32" />
+              <Typography variant="body2">
+                Your form submission was completed successfully
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, mb: 1 }}>
+  <FiUserCheck size={16} color="#2e7d32" style={{ marginTop: 3 }} />
+  <Typography variant="body2">
+    No separate signup is needed .
+  </Typography>
+</Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FiLock size={16} color="#ed6c02" />
+              <Typography variant="body2">
+                This link can no longer be used to prevent duplicate submissions
+              </Typography>
+            </Box>
           </Box>
           <Divider sx={{ my: 2 }} />
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             What to do next?
           </Typography>
           <Box sx={{ textAlign: "left", mx: 3, my: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              📧 Check your email for confirmation
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              ℹ️ No further action is needed
-            </Typography>
-            <Typography variant="body2">
-              ✉️ Contact support if you need to update your information
-            </Typography>
+            <Box
+  sx={{
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 1,
+    mb: 1,
+  }}
+>
+  <FiInfo size={16} color="#1976d2" style={{ marginTop: 3 }} />
+
+  <Typography variant="body2">
+    You're all set!{" "}
+    <Box
+      component="a"
+      href="https://pl-app.iiit.ac.in/c4gt/signin"
+      target="_blank"
+      rel="noopener noreferrer"
+      sx={{
+        color: "#1976d2",
+        fontWeight: 700,
+        fontSize: "1rem",
+        textDecoration: "underline",
+        "&:hover": {
+          textDecoration: "underline",
+          color:"#d219c9ff"
+        },
+      }}
+    >
+      Continue to login →
+    </Box>
+  </Typography>
+</Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <FiInfo size={16} color="#1976d2" />
+              <Typography variant="body2">
+                No further action is needed
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FiMail size={16} color="#1976d2" />
+              <Typography variant="body2">
+                Contact support if you need to update your information
+              </Typography>
+            </Box>
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
             You can close this window now.
@@ -1358,9 +1472,12 @@ const UpdateForm = () => {
             maxWidth: 480,
           }}
         >
-          <Typography variant="h5" color="warning.main" gutterBottom>
-            ⚠️ Form Deferred
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+            <FiAlertTriangle size={28} color="#ed6c02" />
+            <Typography variant="h5" color="warning.main">
+              Form Deferred
+            </Typography>
+          </Box>
           <Typography variant="body1" sx={{ mb: 1 }}>
             You’ve chosen to defer filling this form.
           </Typography>
@@ -1402,9 +1519,34 @@ const UpdateForm = () => {
         }}
       >
         <Stack alignItems="center" spacing={1}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <img src={logo1} alt="Logo1" style={{ width: 36, height: 36 }} />
-            <img src={logo2} alt="Logo2" style={{ width: 36, height: 36 }} />
+          <Stack
+            direction="row"
+            spacing={3}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ mb: 1 }}
+          >
+            <Box
+              component="img"
+              src={logo1}
+              alt="Badal"
+              sx={{
+                height: 42,
+                width: "auto",
+                objectFit: "contain",
+              }}
+            />
+
+            <Box
+              component="img"
+              src={logo2}
+              alt="C4GT"
+              sx={{
+                height: 42,
+                width: "auto",
+                objectFit: "contain",
+              }}
+            />
           </Stack>
           <Typography variant="h6" fontWeight="bold">
             Update Your Information
@@ -1425,27 +1567,33 @@ const UpdateForm = () => {
               gap: 1,
             }}
           >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <FiClock size={20} color={timeRemaining <= 120 ? "#d32f2f" : timeRemaining <= 300 ? "#f57c00" : "#1976d2"} />
+              <Typography
+                sx={{
+                  fontSize: "1.1rem",
+                  fontWeight: "bold",
+                  color: timeRemaining <= 120 ? "#d32f2f" : timeRemaining <= 300 ? "#f57c00" : "#1976d2",
+                }}
+              >
+                Time Remaining: {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, "0")}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+            {timeRemaining <= 120 && <FiAlertTriangle size={14} color="#d32f2f" />}
             <Typography
+              variant="caption"
               sx={{
-                fontSize: "1.1rem",
-                fontWeight: "bold",
-                color: timeRemaining <= 120 ? "#d32f2f" : timeRemaining <= 300 ? "#f57c00" : "#1976d2",
+                color: timeRemaining <= 120 ? "#d32f2f" : "text.secondary",
+                fontWeight: timeRemaining <= 120 ? "bold" : "normal",
               }}
             >
-              ⏱️ Time Remaining: {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, "0")}
+              {timeRemaining <= 120
+                ? "Hurry! Your session will expire soon!"
+                : "Complete the form within 10 minutes or it will expire"}
             </Typography>
           </Box>
-          <Typography
-            variant="caption"
-            sx={{
-              color: timeRemaining <= 120 ? "#d32f2f" : "text.secondary",
-              fontWeight: timeRemaining <= 120 ? "bold" : "normal",
-            }}
-          >
-            {timeRemaining <= 120
-              ? "⚠️ Hurry! Your session will expire soon!"
-              : "Complete the form within 10 minutes or it will expire"}
-          </Typography>
           
           <Divider sx={{ width: "100%", my: 1 }} />
         </Stack>
@@ -1544,7 +1692,7 @@ const UpdateForm = () => {
 
             {/* Email */}
             <TextField
-              label="Email *"
+              label="Email "
               fullWidth
               size="small"
               margin="dense"
@@ -1603,7 +1751,7 @@ const UpdateForm = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Organisation *"
+                    label="Organisation (type to search or select)"
                     size="small"
                     margin="dense"
                     required
@@ -1617,7 +1765,7 @@ const UpdateForm = () => {
             {/* Custom Organization Input (shown when "Other" is selected) */}
             {showCustomOrg && (
               <TextField
-                label="Enter Organization Name *"
+                label="Enter Organization Name "
                 fullWidth
                 size="small"
                 margin="dense"
@@ -1659,6 +1807,8 @@ const UpdateForm = () => {
                   <MenuItem value="Corporate">Corporate</MenuItem>
                   <MenuItem value="Academic">Academic</MenuItem>
                   <MenuItem value="NGO">NGO</MenuItem>
+                  <MenuItem value="Not For Profit">Not For Profit</MenuItem>
+                  <MenuItem value="For Profit">For Profit</MenuItem>
                   <MenuItem value="Self">Self</MenuItem>
                 </Select>
               </FormControl>
@@ -1678,7 +1828,7 @@ const UpdateForm = () => {
               <InputLabel>Role *</InputLabel>
               <Select
                 value={formData.role}
-                label="Role *"
+                label="Role "
                 name="role"
                 onChange={(e) =>
                   setFormData({ ...formData, role: e.target.value })
@@ -1694,77 +1844,127 @@ const UpdateForm = () => {
 
             {/* Tech Skills - Collapsed */}
             <Box sx={{ mt: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-              <Box
-                sx={{
-                  p: 1.5,
-                  cursor: 'pointer',
-                  bgcolor: '#f5f5f5',
-                  borderRadius: '4px 4px 0 0',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-                onClick={() => setFormData({ ...formData, _skillsOpen: !formData._skillsOpen })}
-              >
-                <Typography fontWeight="bold" fontSize={14}>
-                  Tech Skills {formData.skills?.length > 0 && `(${formData.skills.length})`}
-                </Typography>
-                <Typography>{formData._skillsOpen ? '▲' : '▼'}</Typography>
-              </Box>
+              {(() => {
+                const isTechStackComplete = formData.skills?.length >= 1 && formData.skills?.length <= 6;
+                
+                return (
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      cursor: 'pointer',
+                      bgcolor: '#f5f5f5',
+                      borderRadius: '4px 4px 0 0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onClick={() => setFormData({ ...formData, _skillsOpen: !formData._skillsOpen })}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography fontWeight="bold" fontSize={14}>
+                        Tech Skills ({formData.skills?.length || 0})
+                      </Typography>
+
+                      <Fade in={isTechStackComplete}>
+                        <Box>
+                          <FiCheckCircle size={16} color="#2e7d32" />
+                        </Box>
+                      </Fade>
+                    </Box>
+
+                    <Typography>{formData._skillsOpen ? '▲' : '▼'}</Typography>
+                  </Box>
+                );
+              })()}
               {formData._skillsOpen && (
                 <Box sx={{ p: 1.5 }}>
-                  <Autocomplete
-                    multiple
-                    options={SKILLS}
-                    value={formData.skills || []}
-                    onChange={(event, newValue) => {
-                      isDirtyRef.current = true;
-                      const unique = Array.from(new Set(newValue));
-                      if (unique.length <= 6) {
-                        setFormData({ ...formData, skills: unique });
-                      } else {
-                        setFormData({ ...formData, skills: unique.slice(0, 6) });
-                      }
+                  <Box
+                    sx={{
+                      animation: shakeSkills ? `${shake} 0.4s ease` : "none"
                     }}
-                    disableCloseOnSelect
-                    limitTags={3}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select up to 6 skills *"
-                        placeholder="Choose your skills"
-                        size="small"
-                        helperText={
-                          formData.skills?.length === 6
-                            ? "Maximum 6 skills reached"
-                            : "These help us recommend better opportunities."
+                  >
+                    <Autocomplete
+                      multiple
+                      options={SKILLS}
+                      value={formData.skills || []}
+                      disableCloseOnSelect
+                      limitTags={3}
+                      getOptionDisabled={(option) =>
+                        formData.skills.length >= 6 && !formData.skills.includes(option)
+                      }
+                      onChange={(event, newValue) => {
+                        isDirtyRef.current = true;
+
+                        if (newValue.length <= 6) {
+                          setFormData({ ...formData, skills: newValue });
+                        } else {
+                          // Trigger shake
+                          setShakeSkills(true);
+                          setTimeout(() => setShakeSkills(false), 400);
                         }
-                      />
-                    )}
-                  />
+                      }}
+                    renderInput={(params) => {
+                      const isMaxReached = formData.skills.length === 6;
+
+                      return (
+                        <TextField
+                          {...params}
+                          label="Select up to 6 skills *"
+                          placeholder="Choose your skills"
+                          size="small"
+                          error={isMaxReached}
+                          helperText={
+                            isMaxReached
+                              ? "Maximum 6 skills reached"
+                              : `Select up to 6 skills (${formData.skills.length}/6)`
+                          }
+                          FormHelperTextProps={{
+                            sx: {
+                              color: isMaxReached ? "#d32f2f" : "text.secondary",
+                              fontWeight: isMaxReached ? 600 : 400,
+                            },
+                          }}
+                        />
+                      );
+                    }}
+                    />
+                  </Box>
                 </Box>
               )}
             </Box>
 
             {/* Social - Collapsed */}
             <Box sx={{ mt: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-              <Box
-                sx={{
-                  p: 1.5,
-                  cursor: 'pointer',
-                  bgcolor: '#f5f5f5',
-                  borderRadius: '4px 4px 0 0',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-                onClick={() => setFormData({ ...formData, _socialOpen: !formData._socialOpen })}
-              >
-                <Typography fontWeight="bold" fontSize={14}>
-                  Social Accounts {(githubStatus.verified || discordVerified) && '✓'}
-                </Typography>
-                <Typography>{formData._socialOpen ? '▲' : '▼'}</Typography>
-              </Box>
+              {(() => {
+                const isSocialFullyVerified = githubStatus.verified && discordVerified;
+                
+                return (
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      cursor: 'pointer',
+                      bgcolor: '#f5f5f5',
+                      borderRadius: '4px 4px 0 0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onClick={() => setFormData({ ...formData, _socialOpen: !formData._socialOpen })}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography fontWeight="bold" fontSize={14}>
+                        Social Accounts
+                      </Typography>
+
+                      {isSocialFullyVerified && (
+                        <FiCheckCircle size={16} color="#2e7d32" />
+                      )}
+                    </Box>
+
+                    <Typography>{formData._socialOpen ? '▲' : '▼'}</Typography>
+                  </Box>
+                );
+              })()}
               {formData._socialOpen && (
                 <Box sx={{ p: 1.5 }}>
                   {/* GitHub Section */}
@@ -1950,9 +2150,12 @@ const UpdateForm = () => {
                 </Stack>
               )}
               {phoneVerification.isVerified && (
-                <Typography color="success.main" mt={1}>
-                  ✅ Phone verified successfully!
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+                  <FiCheckCircle size={18} color="#2e7d32" />
+                  <Typography color="success.main">
+                    Phone verified successfully!
+                  </Typography>
+                </Box>
               )}
             </Box>
 
