@@ -88,7 +88,7 @@ export const generateEmailTemplate = (action, userName = 'User') => {
                 <tr>
                   <td style="padding-right: 20px;">
                     <img 
-                      src="https://pl-app.iiit.ac.in/rcts/codeforgovtech/static/media/badal_logo.0761a6013a4b149727f6.png" 
+                      src="https://pl-app.iiit.ac.in/c4gt/static/media/badal_logo.0761a6013a4b149727f6.png" 
                       alt="Badal Logo" 
                       width="120" 
                       style="display: block; margin: 0 auto; border: 0;"
@@ -96,7 +96,7 @@ export const generateEmailTemplate = (action, userName = 'User') => {
                   </td>
                   <td>
                     <img 
-                      src="https://pl-app.iiit.ac.in/rcts/codeforgovtech/static/media/c4gt_logo.fff36ac1dfba8e030b95.jpeg" 
+                      src="https://pl-app.iiit.ac.in/c4gt/static/media/c4gt_logo.fff36ac1dfba8e030b95.jpeg" 
                       alt="C4GT Logo" 
                       width="120" 
                       style="display: block; margin: 0 auto; border: 0;"

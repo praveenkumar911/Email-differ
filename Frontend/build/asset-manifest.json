@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/rcts/account-setup/static/css/main.7152e56c.css",
+    "main.js": "/rcts/account-setup/static/js/main.1c2fd2aa.js",
+    "static/js/963.0d6de24d.chunk.js": "/rcts/account-setup/static/js/963.0d6de24d.chunk.js",
+    "static/js/453.20359781.chunk.js": "/rcts/account-setup/static/js/453.20359781.chunk.js",
+    "static/media/header-background.png": "/rcts/account-setup/static/media/header-background.50281072358f6516def9.png",
+    "static/media/white.png": "/rcts/account-setup/static/media/white.5c27bfd61dbb4589f910.png",
+    "static/media/badal_logo.png": "/rcts/account-setup/static/media/badal_logo.0761a6013a4b149727f6.png",
+    "static/media/footer-background.png": "/rcts/account-setup/static/media/footer-background.f877f2b64bd98c0b60b3.png",
+    "static/media/badal_final.png": "/rcts/account-setup/static/media/badal_final.66ca8b6b3926778e662d.png",
+    "static/media/ngo_image.webp": "/rcts/account-setup/static/media/ngo_image.224cc5dd31d61c121ff5.webp",
+    "static/media/c4gt_logo.png": "/rcts/account-setup/static/media/c4gt_logo.69451a8700979829f004.png",
+    "static/media/c4gt_logo.jpeg": "/rcts/account-setup/static/media/c4gt_logo.fff36ac1dfba8e030b95.jpeg",
+    "static/media/org_logo_fallback.png": "/rcts/account-setup/static/media/org_logo_fallback.b62504e9f920ea0f0788.png",
+    "index.html": "/rcts/account-setup/index.html",
+    "main.7152e56c.css.map": "/rcts/account-setup/static/css/main.7152e56c.css.map",
+    "main.1c2fd2aa.js.map": "/rcts/account-setup/static/js/main.1c2fd2aa.js.map",
+    "963.0d6de24d.chunk.js.map": "/rcts/account-setup/static/js/963.0d6de24d.chunk.js.map",
+    "453.20359781.chunk.js.map": "/rcts/account-setup/static/js/453.20359781.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7152e56c.css",
+    "static/js/main.1c2fd2aa.js"
+  ]
+}

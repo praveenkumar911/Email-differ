@@ -91,7 +91,7 @@ const sendFormEmails = async (req, res) => {
             </p>
             
             <p style="font-size: 15px; margin-bottom: 20px;">
-              We are thrilled to introduce <a href="https://pl-app.iiit.ac.in/rcts/codeforgovtech/home" style="color: #667eea; text-decoration: none; font-weight: bold;" target="_blank">Badal</a> - the new, all-in-one platform designed to be 
+              We are thrilled to introduce <a href="https://pl-app.iiit.ac.in/c4gt" style="color: #667eea; text-decoration: none; font-weight: bold;" target="_blank">Badal</a> - the new, all-in-one platform designed to be 
               the single home for everything C4GT.
             </p>
             
@@ -317,7 +317,7 @@ const resendDeferredEmails = async () => {
             </p>
             
             <p style="font-size: 15px; margin-bottom: 20px;">
-              We are thrilled to introduce <a href="https://pl-app.iiit.ac.in/rcts/codeforgovtech/home" style="color: #667eea; text-decoration: none; font-weight: bold;" target="_blank">Badal</a> - the new, all-in-one platform designed to be 
+              We are thrilled to introduce <a href="https://pl-app.iiit.ac.in/c4gt" style="color: #667eea; text-decoration: none; font-weight: bold;" target="_blank">Badal</a> - the new, all-in-one platform designed to be 
               the single home for everything C4GT.
             </p>
             
