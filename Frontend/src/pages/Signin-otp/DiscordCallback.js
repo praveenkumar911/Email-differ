@@ -67,7 +67,7 @@ export default function DiscordCallback() {
       
       try {
         const res = await axios.post(
-          "https://pl-api.iiit.ac.in/rcts/account-setup/api/discord/callback",
+          "http://localhost:8000/api/discord/callback",
           { code }
         );
 

@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 const UserSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
+  alternateEmails: {
+    type: [String],
+    default: []
+  },
   phone: String,
   githubId: String,
   githubUrl: String,

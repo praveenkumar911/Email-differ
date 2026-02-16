@@ -13,6 +13,8 @@ import { User } from '../models/usercollection.js'; // ✅ Import User for prod 
 import { normalizeToE164 } from '../utils/phoneUtils.js'; // ✅ International phone normalization
 import Orgs from '../models/orgs.js';
 import { defaultOrgsCollection } from '../models/defaultOrgs.js';
+import { sendEmail } from '../utils/emailService.js';
+import { generateEmailTemplate } from '../utils/emailTemplates.js';  // Adjust path
 
 
 // ✅ Production DB Connection (for User collection)
@@ -515,12 +517,52 @@ const submitForm = async (req, res) => {
             await pending.save();
 
             // continue the normal flow: mark token used and cleanup
-            log.usedAt = new Date();
-            await log.save();
-            await DeferredData.deleteMany({ user: log.user });
-            await PartialUpdateData.deleteMany({ user: log.user });
+            // ✅ Mark token as used
+log.usedAt = new Date();
+await log.save();
 
-            return res.status(200).json({ message: 'Form submitted successfully! Your information has been updated.', success: true });
+// ✅ Clean up partial/deferred data
+await DeferredData.deleteMany({ user: log.user });
+await PartialUpdateData.deleteMany({ user: log.user });
+
+// =====================================================
+// ✅ Send success confirmation email (AFTER everything)
+// =====================================================
+try {
+  if (cleanedData.email) {
+    const userName = cleanedData.fullName || 'C4GT Contributor';
+
+    const { subject, html } = generateEmailTemplate(
+      'form-submitted',
+      userName
+    );
+
+    await sendEmail(cleanedData.email, subject, null, html);
+
+    console.log(`📧 Form submission success email sent to ${cleanedData.email}`);
+
+    await EmailLog.create({
+      user: log.user._id,
+      recipientEmail: cleanedData.email,
+      emailType: 'form_submission_success',
+      sentAt: new Date(),
+      status: 'sent',
+      linkToken: token
+    });
+  }
+} catch (emailErr) {
+  console.error(
+    `⚠️ Failed to send form success email to ${cleanedData.email}:`,
+    emailErr
+  );
+  // 🚫 DO NOT throw — submission should still succeed
+}
+
+return res.status(200).json({
+  message: "Form submitted successfully! Your information has been updated.",
+  success: true
+});
+
           } catch (fallbackErr) {
             console.error('❌ Fallback non-transactional flow failed:', fallbackErr);
             // Attempt to cleanup any pending record if possible

@@ -43,13 +43,26 @@ const sendFormEmails = async (req, res) => {
         console.log(`🔄 Sending to deferred user ${user.email} (attempt ${deferred.attempts + 1}/3)`);
       }
 
-      // ✅ Skip users without an email
-      if (!user.email) {
-        console.warn(`Skipping user ${user._id} - no email`);
+      // ✅ Collect all email addresses for this user (primary + alternates)
+      const emailsToSend = [];
+      if (user.email) {
+        emailsToSend.push(user.email);
+      }
+      if (user.alternateEmails && user.alternateEmails.length > 0) {
+        // Remove duplicates using Set
+        const uniqueAlternates = user.alternateEmails.filter(
+          altEmail => altEmail && altEmail !== user.email
+        );
+        emailsToSend.push(...uniqueAlternates);
+      }
+
+      // ✅ Skip if no valid emails
+      if (emailsToSend.length === 0) {
+        console.warn(`⚠️ Skipping user ${user._id} - no valid emails`);
         continue;
       }
 
-      // ✅ Generate unique token and link
+      // ✅ Generate unique token and link (shared for all user's emails)
       const token = generateToken();
       const link = `${process.env.FRONTEND_URL}/update-form?token=${token}`;
       //const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${token}`;
@@ -140,39 +153,52 @@ const sendFormEmails = async (req, res) => {
         </div>
       `;
 
-      console.log(`📧 Sending email to ${user.email}`);
+      console.log(`📧 Sending email to ${emailsToSend.length} address(es) for user ${user.name || user._id}`);
 
-      const emailSent = await sendEmail(user.email, "Introducing Badal: A new home for your C4GT journey!", html);
+      // ✅ Send to all email addresses for this user
+      let emailsSentForUser = 0;
+      for (const recipientEmail of emailsToSend) {
+        const emailSent = await sendEmail(recipientEmail, "Introducing Badal: A new home for your C4GT journey!", html);
 
-      if (emailSent) {
-        // ✅ Log sent email
-        await EmailLog.create({
-          user: user._id,
-          emailType: "update_form",
-          sentAt: new Date(),
-          status: "sent",
-          linkToken: token,
-          verifiedPhone: null, // 🔹 placeholder for Firebase verification
-        });
+        if (emailSent) {
+          // ✅ Log sent email with recipient address
+          await EmailLog.create({
+            user: user._id,
+            recipientEmail: recipientEmail,
+            emailType: "update_form",
+            sentAt: new Date(),
+            status: "sent",
+            linkToken: token,
+            verifiedPhone: null, // 🔹 placeholder for Firebase verification
+          });
 
+          emailsSentForUser++;
+          console.log(`✅ Email sent to ${recipientEmail}`);
+        } else {
+          // ❌ Email failed
+          await EmailLog.create({
+            user: user._id,
+            recipientEmail: recipientEmail,
+            emailType: "update_form",
+            sentAt: new Date(),
+            status: "failed",
+            linkToken: token,
+            verifiedPhone: null,
+          });
+          console.log(`❌ Email failed for ${recipientEmail}`);
+        }
+      }
+
+      // ✅ If at least one email was sent successfully
+      if (emailsSentForUser > 0) {
         // ✅ Update user record
         user.lastEmailSent = new Date();
-        user.emailSentCount = (user.emailSentCount || 0) + 1;
+        user.emailSentCount = (user.emailSentCount || 0) + emailsSentForUser;
         await user.save();
 
-        sentCount++;
+        sentCount += emailsSentForUser;
       } else {
-        // ❌ Email failed
-        await EmailLog.create({
-          user: user._id,
-          emailType: "update_form",
-          sentAt: new Date(),
-          status: "failed",
-          linkToken: token,
-          verifiedPhone: null,
-        });
-
-        // ✅ Add to DeferredData for retry
+        // ❌ All emails failed - add to DeferredData for retry
         const existingDeferred = await DeferredData.findOne({ user: user._id });
         if (existingDeferred) {
           existingDeferred.attempts += 1;
@@ -241,6 +267,26 @@ const resendDeferredEmails = async () => {
         console.log(`🛑 Max reminders (${reminderCount}) already sent to ${user.email} - removing from deferred`);
         await DeferredData.deleteOne({ _id: deferred._id });
         await EmailLog.updateMany({ user: user._id, usedAt: null }, { usedAt: new Date() });
+        continue;
+      }
+
+      // ✅ Collect all email addresses for this user (primary + alternates)
+      const emailsToSend = [];
+      if (user.email) {
+        emailsToSend.push(user.email);
+      }
+      if (user.alternateEmails && user.alternateEmails.length > 0) {
+        // Remove duplicates
+        const uniqueAlternates = user.alternateEmails.filter(
+          altEmail => altEmail && altEmail !== user.email
+        );
+        emailsToSend.push(...uniqueAlternates);
+      }
+
+      // ✅ Skip if no valid emails
+      if (emailsToSend.length === 0) {
+        console.warn(`⚠️ Skipping deferred user ${user._id} - no valid emails`);
+        await DeferredData.deleteOne({ _id: deferred._id });
         continue;
       }
 
@@ -333,20 +379,42 @@ const resendDeferredEmails = async () => {
         </div>
       `;
 
-      console.log(`📧 Sending reminder to ${user.email}`);
-      const emailSent = await sendEmail(user.email, "C4GT - Set up your Badal profile - Your journey awaits!", html);
+      console.log(`📧 Sending reminder to ${emailsToSend.length} address(es) for user ${user.name || user._id}`);
+      
+      // ✅ Send to all email addresses for this user
+      let remindersSentForUser = 0;
+      for (const recipientEmail of emailsToSend) {
+        const emailSent = await sendEmail(recipientEmail, "C4GT - Set up your Badal profile - Your journey awaits!", html);
 
-      if (emailSent) {
-        console.log(`✅ Reminder sent to ${user.email}`);
-        await EmailLog.create({
-          user: user._id,
-          emailType: "update_form_reminder",
-          sentAt: new Date(),
-          status: "sent",
-          linkToken: token,
-          verifiedPhone: null,
-        });
+        if (emailSent) {
+          console.log(`✅ Reminder sent to ${recipientEmail}`);
+          await EmailLog.create({
+            user: user._id,
+            recipientEmail: recipientEmail,
+            emailType: "update_form_reminder",
+            sentAt: new Date(),
+            status: "sent",
+            linkToken: token,
+            verifiedPhone: null,
+          });
 
+          remindersSentForUser++;
+        } else {
+          console.log(`❌ Reminder failed for ${recipientEmail}`);
+          await EmailLog.create({
+            user: user._id,
+            recipientEmail: recipientEmail,
+            emailType: "update_form_reminder",
+            sentAt: new Date(),
+            status: "failed",
+            linkToken: token,
+            verifiedPhone: null,
+          });
+        }
+      }
+
+      // ✅ If at least one reminder was sent successfully
+      if (remindersSentForUser > 0) {
         // ✅ Use atomic increment to prevent race conditions
         await DeferredData.updateOne(
           { _id: deferred._id, attempts: { $lt: 3 } },
@@ -356,17 +424,7 @@ const resendDeferredEmails = async () => {
           }
         );
       } else {
-        console.log(`❌ Reminder failed for ${user.email}`);
-        await EmailLog.create({
-          user: user._id,
-          emailType: "update_form_reminder",
-          sentAt: new Date(),
-          status: "failed",
-          linkToken: token,
-          verifiedPhone: null,
-        });
-
-        // ✅ Use atomic increment even on failure
+        // ❌ All reminders failed - still increment attempts
         await DeferredData.updateOne(
           { _id: deferred._id, attempts: { $lt: 3 } },
           { 

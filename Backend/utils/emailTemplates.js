@@ -40,6 +40,19 @@ export const generateEmailTemplate = (action, userName = 'User') => {
       heading: 'Your Project Was Updated',
       message: 'You have successfully updated your project details on Badal.'
     },
+    // In emailTemplates.js
+'form-submitted': {
+  subject: 'Your Badal Profile is Now Complete!',
+  heading: 'Thank You for Updating Your Profile',
+  message: `
+    Your information has been successfully saved.<br>
+    You are now part of the Badal community dashboard.<br><br>
+    <strong>Next step:</strong> You can log in anytime at 
+    <a href="https://pl-app.iiit.ac.in/c4gt/signin" style="color:#1E4DD8; text-decoration:underline;">
+      https://pl-app.iiit.ac.in/c4gt/signin
+    </a>
+  `
+},
 
     // === Fallback (generic edit) ===
     edit: {
@@ -47,7 +60,9 @@ export const generateEmailTemplate = (action, userName = 'User') => {
       heading: 'Your Information Was Updated',
       message: 'You have successfully updated your information on Badal.'
     }
+    
   };
+  
 
   const { subject, heading, message } = actions[action] || actions.edit;
 

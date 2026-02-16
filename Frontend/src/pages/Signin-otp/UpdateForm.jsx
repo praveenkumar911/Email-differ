@@ -100,9 +100,9 @@ const githubRegex = /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_-]+\/?$/;
 // eslint-disable-next-line no-unused-vars
 const linkedinRegex = /^https:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+\/?$/;
 
- const DISCORD_REDIRECT = "https://pl-app.iiit.ac.in/rcts/account-setup/discord-callback";
+// const DISCORD_REDIRECT = "https://pl-app.iiit.ac.in/rcts/account-setup/discord-callback";
 // const DISCORD_INVITE = "https://discord.gg/BsbzbUHz";
-//const DISCORD_REDIRECT = "http://127.0.0.1:3000/rcts/codeforgovtech/discord-callback";
+const DISCORD_REDIRECT = "http://127.0.0.1:3000/rcts/codeforgovtech/discord-callback";
 const DISCORD_INVITE = "https://discord.gg/BsbzbUHz";
 // ✅ Generate OAuth state for CSRF protection
 const generateOAuthState = () => {

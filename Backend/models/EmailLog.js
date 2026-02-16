@@ -2,12 +2,13 @@ import mongoose from 'mongoose';
 
 const EmailLogSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'mailUser' },
+  recipientEmail: { type: String }, // Track which specific email received the message
   emailType: String,
   sentAt: { type: Date, default: Date.now },
   status: String,
   linkToken: { 
     type: String, 
-    unique: true,
+    
     index: true
   },
   activatedAt: { type: Date, default: null, index: true },

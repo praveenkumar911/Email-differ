@@ -15,8 +15,8 @@ import pgPool from '../config/postgresconf.js';
 import { admin } from '../config/firebaseAdmin.js';
 import logger from '../logger.js';
 import { Logger } from 'winston';
-import { sendEmail } from './emailService.js';
-import { generateEmailTemplate } from './emailTemplates.js';
+import { sendEmail } from '../utils/emailService.js';
+import { generateEmailTemplate } from '../utils/emailTemplates.js';
 
 // Postgres pool
 router.use(bodyParser.json());
