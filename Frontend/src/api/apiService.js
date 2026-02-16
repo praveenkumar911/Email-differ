@@ -4,7 +4,7 @@ import axios from "axios";
 // 🌍 Base URL setup (local + production)
 // Allow env to provide http://localhost:8000 or http://10.8.0.15:8000/api
 const rawBase =
-  process.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8000/api";
+  process.env.VITE_REACT_APP_API_BASE_URL || "https://pl-api.iiit.ac.in/rcts/account-setup/api";
 
 // Ensure baseURL always ends with /api
 const normalized = (() => {
