@@ -13,7 +13,7 @@ import emailRoutes from './routes/emailRoutes.js';
 import formRoutes from './routes/formRoutes.js';
 import authRoutes from "./routes/auth.routes.js";
 import discordRoutes from "./routes/discord_routes.js";
-
+import { seedOrganizations } from './models/defaultOrgs.js';
 import EmailLog from './models/EmailLog.js';
 import PartialUpdateData from './models/PartialUpdateData.js'; // ✅ Add import
 

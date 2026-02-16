@@ -4,7 +4,8 @@ const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : u
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: smtpPort,
-  secure: smtpPort === 465, // true for 465, false for other ports
+  // secure: smtpPort === 465, // true for 465, false for other ports
+  secure: false, 
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -26,7 +27,7 @@ const sendEmail = async (to, subject, html) => {
     console.log('Subject:', subject);
     
     const info = await transporter.sendMail({
-      from: `"Data Update" <${process.env.SMTP_USER}>`,
+      from: `"C4GT-BADAL" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,

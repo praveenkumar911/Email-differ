@@ -3,79 +3,72 @@ import mongoose from "mongoose";
 const ActiveUserSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true, trim: true },
-    phone: { type: String, required: true, unique: true },
-    email: { type: String, trim: true },
-    gender: { type: String, enum: ["Male", "Female", "Other"] },
 
-    organisation: { type: String, trim: true },
-    orgType: {
+    phone: {
       type: String,
-      enum: [
-        "Government",
-        "NGO",
-        "Academic",
-        "Corporate",
-        "Social Enterprise",
-        "Intergovernmental / Multilateral",
-        "Community-Based",
-        "Philanthropic Foundation / Trust",
-        "Cooperative Society",
-        "PSU",
-        "Think Tank / Policy Research",
-        "Faith-Based Organization",
-        "Professional Association",
-        "Startup / Innovation Hub",
-        "Media / Advocacy",
-        "Self",
-      ],
+      required: true,
+      unique: true,
+      validate: {
+        validator: v => /^\+\d{8,15}$/.test(v),
+        message: props => `${props.value} is not valid E.164 format`
+      }
     },
 
-    role: {
+    email: { type: String, trim: true },
+
+    gender: { type: String, enum: ["Male", "Female", "Other"] },
+
+    // ✅ Structured Organization
+    organization: {
+      name: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      ref: {
+        type: {
+          type: String,
+          enum: ["orgs", "default", "custom"],
+          required: true
+        },
+        id: {
+          type: String,
+          default: null
+        }
+      }
+    },
+
+    orgType: {
       type: String,
-      enum: ["Student", "Self", "Mentor", "Manager", "Program Coordinator"],
-      required: true,
+      trim: true
+    },
+
+    // ✅ Role ID (Single source of truth)
+    roleId: {
+      type: String,
+      required: true
     },
 
     // Socials
-    discordId: { type: String },
-    githubId: { type: String },
-    githubUrl: { type: String },
-    linkedinId: { type: String },
-
-    // Persisted consent
+    discordId: String,
+    githubId: String,
+    githubUrl: String,
+    linkedinId: String,
+    techStack: [{ type: String }],
     acceptedTerms: { type: Boolean, default: false },
-    acceptedTermsAt: { type: Date },
+    acceptedTermsAt: Date,
 
-    // Verification and login
     isPhoneVerified: { type: Boolean, default: false },
-    lastLogin: { type: Date },
+    lastLogin: Date,
 
-    // Source tracking
     source: {
       type: String,
       enum: ["signup", "updateform"],
       default: "signup"
     },
-
-    // JWT & Audit
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
-
-// Pre-save hook to normalize phone to +91XXXXXXXXXX format
-ActiveUserSchema.pre("save", function (next) {
-  try {
-    if (this.phone) {
-      const digits = String(this.phone).replace(/\D/g, "");
-      this.phone = `+91${digits.replace(/^91/, "")}`;
-    }
-  } catch (e) {
-    // ignore and proceed
-  }
-  next();
-});
 
 export default mongoose.model("ActiveUser", ActiveUserSchema);
     

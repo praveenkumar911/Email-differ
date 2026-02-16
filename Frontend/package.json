@@ -16,6 +16,8 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.12.2",
     "firebase": "^12.6.0",
+    "libphonenumber-js": "^1.12.36",
+    "mui-tel-input": "^9.0.1",
     "rcts-icons": "^2.0.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

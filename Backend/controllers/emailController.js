@@ -52,7 +52,7 @@ const sendFormEmails = async (req, res) => {
       // ✅ Generate unique token and link
       const token = generateToken();
       const link = `${process.env.FRONTEND_URL}/update-form?token=${token}`;
-      const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${token}`;
+      //const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${token}`;
 
       // ✅ Assign default role
       if (!user.role) {
@@ -62,20 +62,87 @@ const sendFormEmails = async (req, res) => {
 
       // ✅ Email content with unsubscribe link
       const html = `
-        <h3>Hello ${user.name || "User"},</h3>
-        <p>Please update your data by clicking the secure link below:</p>
-        <p><a href="${link}" target="_blank">Update Your Data</a></p>
-        <p>This link will expire in 24 hours.</p>
-        <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;" />
-        <p style="font-size: 12px; color: #666;">
-          If you no longer wish to receive these emails, 
-          <a href="${optOutLink}" style="color: #666;">unsubscribe here</a>.
-        </p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; color: #333; line-height: 1.6;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Introducing Badal</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">A new home for your C4GT journey!</p>
+          </div>
+          
+          <div style="background-color: #ffffff; padding: 40px 35px; border: 1px solid #e0e0e0; border-top: none;">
+            <p style="font-size: 16px; margin-bottom: 20px;">Dear <strong>${user.name || "C4GT Community Member"}</strong>,</p>
+            
+            <p style="font-size: 15px; margin-bottom: 16px;">
+              From the very first line of code to every milestone reached, your energy has been the heartbeat of Code for GovTech. 
+              You've navigated Discord, GitHub, and our website to make an impact - and now, we've built something to make that journey 
+              smoother, more rewarding, and uniquely yours.
+            </p>
+            
+            <p style="font-size: 15px; margin-bottom: 20px;">
+              We are thrilled to introduce <a href="https://pl-app.iiit.ac.in/rcts/codeforgovtech/home" style="color: #667eea; text-decoration: none; font-weight: bold;" target="_blank">Badal</a> - the new, all-in-one platform designed to be 
+              the single home for everything C4GT.
+            </p>
+            
+            <h2 style="color: #667eea; font-size: 20px; margin: 30px 0 16px 0; font-weight: 600;">Why Badal?</h2>
+            
+            <div style="margin: 20px 0;">
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">🔑 One-Stop Access:</strong> A single sign-on using your GitHub and Discord IDs. Connect them once, and you're set!
+              </p>
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">🔍 Smart Project Discovery:</strong> Find the perfect project in seconds. Filter by tech stack, domain, or organization 
+                to find work that matches your passion. Not only projects, browse entire repositories with a single click.
+              </p>
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">👤 Your Personal Contributor Profile:</strong> A dedicated space that captures your entire journey - your contributions, 
+                your role (whether you're a Mentor, Contributor, or NGO partner), and your growth over time.
+              </p>
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">📊 Unified Visibility:</strong> Beyond the leaderboard, you can now see the overall metrics of the C4GT ecosystem 
+                and track your impact in real-time.
+              </p>
+            </div>
+            
+            <h2 style="color: #667eea; font-size: 20px; margin: 30px 0 16px 0; font-weight: 600;">Ready to move in? 🏠</h2>
+            
+            <p style="font-size: 15px; margin-bottom: 16px;">Getting started on Badal is easy.</p>
+            
+            <div style="background-color: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 25px 0;">
+              <p style="margin: 0 0 15px 0; font-size: 15px; font-weight: 600; color: #333;">
+                Fill in your details to help us create your profile. Just make sure to complete the form before signing in.
+              </p>
+              <p style="text-align: center; margin: 20px 0;">
+                <a href="${link}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">Complete Your Profile</a>
+              </p>
+              <p style="text-align: center; margin: 15px 0 5px 0; font-size: 14px; color: #666;">
+                Or copy this link: <a href="${link}" style="color: #667eea; text-decoration: none; word-break: break-all;">${link}</a>
+              </p>
+              <p style="text-align: center; margin: 5px 0 0 0; font-size: 12px; color: #888;">
+                ⏱️ This personalized link will expire in 24 hours.
+              </p>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; background-color: #fff8e1; padding: 15px; border-radius: 6px; margin: 25px 0;">
+              <strong>Note:</strong> While our community remains active on Discord for conversations, Badal is now your primary dashboard 
+              for projects, metrics, and profiles.
+            </p>
+            
+            <p style="font-size: 15px; margin: 25px 0 10px 0;">
+              Thank you for being a part of this evolution. We can't wait to see your journey unfold on Badal!
+            </p>
+            
+            <p style="font-size: 15px; margin-top: 20px;">
+              <strong>Warmly,</strong><br>
+              <span style="color: #667eea; font-weight: 600;">The C4GT Team</span>
+            </p>
+          </div>
+          
+         
+        </div>
       `;
 
       console.log(`📧 Sending email to ${user.email}`);
 
-      const emailSent = await sendEmail(user.email, "Update Your Data", html);
+      const emailSent = await sendEmail(user.email, "Introducing Badal: A new home for your C4GT journey!", html);
 
       if (emailSent) {
         // ✅ Log sent email
@@ -116,14 +183,10 @@ const sendFormEmails = async (req, res) => {
         }
       }
 
-      // ✅ Rate limiting: pause after every email to prevent SMTP throttling
-      // Configurable via EMAIL_DELAY_MS environment variable (default: 1500ms)
-      if (i < users.length - 1) {
-        const delayMs = parseInt(process.env.EMAIL_DELAY_MS) || 1500;
-        if ((i + 1) % 10 === 0) {
-          console.log(`⏸️  Progress: ${i + 1}/${users.length} emails sent...`);
-        }
-        await delay(delayMs);
+      // ✅ Rate limiting: pause every 10 emails to prevent SMTP throttling
+      if ((i + 1) % 10 === 0 && i < users.length - 1) {
+        console.log(`⏸️  Pausing for 1 second after ${i + 1} emails...`);
+        await delay(1000);
       }
     }
 
@@ -183,22 +246,95 @@ const resendDeferredEmails = async () => {
 
       const token = generateToken();
       const link = `${process.env.FRONTEND_URL}/update-form?token=${token}`;
-      const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${token}`;
+      //const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${token}`;
 
       const html = `
-        <h3>Hello ${user.name || "User"},</h3>
-        <p>This is a friendly reminder to update your data:</p>
-        <p><a href="${link}" target="_blank">Update Your Data</a></p>
-        <p>This link will expire in 24 hours.</p>
-        <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;" />
-        <p style="font-size: 12px; color: #666;">
-          If you no longer wish to receive these emails, 
-          <a href="${optOutLink}" style="color: #666;">unsubscribe here</a>.
-        </p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; color: #333; line-height: 1.6;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Introducing Badal</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">A new home for your C4GT journey!</p>
+          </div>
+          
+          <div style="background-color: #ffffff; padding: 40px 35px; border: 1px solid #e0e0e0; border-top: none;">
+            <div style="background-color: #fff8e1; border-left: 4px solid #ffc107; padding: 15px 20px; margin-bottom: 25px; border-radius: 4px;">
+              <p style="margin: 0; font-size: 15px; color: #856404;">
+                <strong>⏰ C4GT Reminder:</strong> We noticed you haven't set up your Badal profile yet. Your contributions are waiting to be showcased!
+              </p>
+            </div>
+            
+            <p style="font-size: 16px; margin-bottom: 20px;">Dear <strong>${user.name || "C4GT Community Member"}</strong>,</p>
+            
+            <p style="font-size: 15px; margin-bottom: 16px;">
+              From the very first line of code to every milestone reached, your energy has been the heartbeat of Code for GovTech. 
+              You've navigated Discord, GitHub, and our website to make an impact - and now, we've built something to make that journey 
+              smoother, more rewarding, and uniquely yours.
+            </p>
+            
+            <p style="font-size: 15px; margin-bottom: 20px;">
+              We are thrilled to introduce <a href="https://pl-app.iiit.ac.in/rcts/codeforgovtech/home" style="color: #667eea; text-decoration: none; font-weight: bold;" target="_blank">Badal</a> - the new, all-in-one platform designed to be 
+              the single home for everything C4GT.
+            </p>
+            
+            <h2 style="color: #667eea; font-size: 20px; margin: 30px 0 16px 0; font-weight: 600;">Why Badal?</h2>
+            
+            <div style="margin: 20px 0;">
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">🔑 One-Stop Access:</strong> A single sign-on using your GitHub and Discord IDs. Connect them once, and you're set!
+              </p>
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">🔍 Smart Project Discovery:</strong> Find the perfect project in seconds. Filter by tech stack, domain, or organization 
+                to find work that matches your passion. Not only projects, browse entire repositories with a single click.
+              </p>
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">👤 Your Personal Contributor Profile:</strong> A dedicated space that captures your entire journey - your contributions, 
+                your role (whether you're a Mentor, Contributor, or NGO partner), and your growth over time.
+              </p>
+              <p style="margin: 12px 0; font-size: 15px;">
+                <strong style="color: #764ba2;">📊 Unified Visibility:</strong> Beyond the leaderboard, you can now see the overall metrics of the C4GT ecosystem 
+                and track your impact in real-time.
+              </p>
+            </div>
+            
+            <h2 style="color: #667eea; font-size: 20px; margin: 30px 0 16px 0; font-weight: 600;">Ready to move in? 🏠</h2>
+            
+            <p style="font-size: 15px; margin-bottom: 16px;">Getting started on Badal is easy.</p>
+            
+            <div style="background-color: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 25px 0;">
+              <p style="margin: 0 0 15px 0; font-size: 15px; font-weight: 600; color: #333;">
+                Fill in your details to help us create your profile. Just make sure to complete the form before signing in.
+              </p>
+              <p style="text-align: center; margin: 20px 0;">
+                <a href="${link}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">Complete Your Profile</a>
+              </p>
+              <p style="text-align: center; margin: 15px 0 5px 0; font-size: 14px; color: #666;">
+                Or copy this link: <a href="${link}" style="color: #667eea; text-decoration: none; word-break: break-all;">${link}</a>
+              </p>
+              <p style="text-align: center; margin: 8px 0 0 0; font-size: 12px; color: #888; font-style: italic;">
+                ⏱️ Your personalized profile link expires in 24 hours
+              </p>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; background-color: #fff8e1; padding: 15px; border-radius: 6px; margin: 25px 0;">
+              <strong>Note:</strong> While our community remains active on Discord for conversations, Badal is now your primary dashboard 
+              for projects, metrics, and profiles.
+            </p>
+            
+            <p style="font-size: 15px; margin: 25px 0 10px 0;">
+              Thank you for being a part of this evolution. We can't wait to see your journey unfold on Badal!
+            </p>
+            
+            <p style="font-size: 15px; margin-top: 20px;">
+              <strong>Warmly,</strong><br>
+              <span style="color: #667eea; font-weight: 600;">The C4GT Team</span>
+            </p>
+          </div>
+          
+          
+        </div>
       `;
 
       console.log(`📧 Sending reminder to ${user.email}`);
-      const emailSent = await sendEmail(user.email, "Reminder: Update Your Data", html);
+      const emailSent = await sendEmail(user.email, "C4GT - Set up your Badal profile - Your journey awaits!", html);
 
       if (emailSent) {
         console.log(`✅ Reminder sent to ${user.email}`);
@@ -268,3 +404,4 @@ const resendDeferredEmails = async () => {
 };
 
 export { sendFormEmails, resendDeferredEmails };
+  

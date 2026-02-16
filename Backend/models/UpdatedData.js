@@ -2,50 +2,65 @@ import mongoose from 'mongoose';
 
 const UpdatedDataSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'mailUser' },
+
   updatedData: {
     fullName: String,
     email: String,
     phone: String,
+
     gender: {
       type: String,
       enum: ["Male", "Female", "Other", "Prefer not to say"]
     },
-    organisation: String,
+
+    // ✅ Structured organization (same as ActiveUser)
+    organization: {
+      name: { type: String, trim: true },
+      ref: {
+        type: {
+          type: String,
+          enum: ["orgs", "default", "custom"]
+        },
+        id: { type: String }
+      }
+    },
+
+    // ✅ No enum restriction
     orgType: {
       type: String,
-      enum: [
-        "Government Organizations (Gov)",
-        "Non-Governmental Organizations (NGO)",
-        "Academic",
-        "Corporate (For-Profit)",
-        "Social Enterprises",
-        "Intergovernmental / Multilateral Organizations",
-        "Community-Based Organizations (CBOs)",
-        "Philanthropic Foundations / Trusts",
-        "Cooperative Societies",
-        "Public Sector Undertakings (PSUs)",
-        "Think Tanks / Policy Research Institutes",
-        "Faith-Based Organizations (FBOs)",
-        "Professional Associations / Bodies",
-        "Startup / Innovation Hubs",
-        "Media and Advocacy Organizations",
-        "Self",
-      ]
+      trim: true
     },
+
     role: {
       type: String,
-      enum: ["Developer", "Mentor"]
+      enum: ["Developer"]
     },
+
     githubId: String,
     githubUrl: String,
     discordId: String,
-    linkedinId: String
+    linkedinId: String,
+
+    // ✅ Tech skills
+    techStack: {
+      type: [String],
+      default: []
+    }
   },
+
   submittedAt: { type: Date, default: Date.now },
-  // status: pending | completed | failed
-  status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
-  // productionUserId: store userId created in production DB (if successful)
-  productionUserId: { type: String, default: null },
-});
+
+  status: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending'
+  },
+
+  productionUserId: {
+    type: String,
+    default: null
+  }
+
+}, { timestamps: true });
 
 export default mongoose.model('UpdatedData', UpdatedDataSchema);

@@ -24,12 +24,29 @@ const userSchema = new mongoose.Schema({
   type: String,
   primaryEmail: { type: String, sparse: true },  
   alternateEmails: [{ type: String }],
-  organization: String,
+  organization: {
+    name: {
+      type: String,
+      required: true
+    },
+    ref: {
+      type: {
+        type: String,
+        enum: ["orgs", "default", "custom"],
+        required: true
+      },
+      id: {
+        type: String,
+        default: null
+      }
+    }
+  },
   orgType: String,
   isverified: { type: Boolean, default: false },
   role: String,                                   
   roleId: String,                                 
   githubUrl: String,
+  githubId: String,
   discordId: String,
   linkedInUrl: String,
   passwordHash: String,

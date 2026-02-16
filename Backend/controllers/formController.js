@@ -10,6 +10,9 @@ import { verifyFirebaseOtp } from '../utils/otpHelper.js';
 import { auth, admin } from '../config/firebaseAdmin.js';
 import mongoose from 'mongoose';
 import { User } from '../models/usercollection.js'; // ✅ Import User for prod DB
+import { normalizeToE164 } from '../utils/phoneUtils.js'; // ✅ International phone normalization
+import Orgs from '../models/orgs.js';
+import { defaultOrgsCollection } from '../models/defaultOrgs.js';
 
 
 // ✅ Production DB Connection (for User collection)
@@ -39,34 +42,11 @@ const getProdUserModel = async () => {
   return conn.model('User', User.schema);
 };
 
-// ✅ Global phone normalization - consistent across all functions
-const normalizePhone = (num) => {
-  if (!num) return '';
-  const cleaned = num.replace(/\D/g, ''); // Remove non-digits
-  
-  // If it's 12 digits and starts with 91, remove the country code
-  if (cleaned.length === 12 && cleaned.startsWith('91')) {
-    return `+91${cleaned.substring(2)}`;
-  }
-  
-  // If it's 10 digits, add +91
-  if (cleaned.length === 10) {
-    return `+91${cleaned}`;
-  }
-  
-  // If it already has +91 prefix (13 chars total), return as is
-  if (String(num).startsWith('+91') && cleaned.length === 12) {
-    return `+91${cleaned.substring(2)}`;
-  }
-  
-  return '';
-};
-
 // ✅ Field validation constants
 const FIELD_LIMITS = {
   fullName: 100,
   email: 255,
-  organisation: 200,
+  organizationName: 200,
   githubUrl: 255,
   discordId: 100,
   linkedinId: 255,
@@ -74,19 +54,6 @@ const FIELD_LIMITS = {
 
 // ✅ OTP expiry time (1 hour)
 const OTP_EXPIRY_MS = 60 * 60 * 1000; 
-
-// ✅ Phone normalization for User schema (10 digits only)
-const normalizePhoneForUser = (num) => {
-  if (!num) return null;
-  let digits = String(num).replace(/\D/g, '');
-  if (digits.startsWith('91') && digits.length === 12) {
-    return digits.substring(2); // Return 10 digits only
-  }
-  if (digits.length === 10) {
-    return digits;
-  }
-  return null;
-};
 
 // ------------------------------
 // Activate token on first open
@@ -210,13 +177,13 @@ const verifyPhoneOtp = async (req, res) => {
     // 🔹 Verify Firebase token
     const decoded = await auth.verifyIdToken(firebaseToken);
     
-    const firebasePhone = decoded.phone_number; // should include +91 prefix
+    const firebasePhone = decoded.phone_number; // E.164 format from Firebase
 
-    // 🔹 Use standardized normalization
-    const normalizedBackend = normalizePhone(phone);
-    const normalizedFirebase = normalizePhone(firebasePhone || "");
+    // 🔹 Normalize to E.164 format (international support)
+    const normalizedBackend = normalizeToE164(phone);
+    const normalizedFirebase = normalizeToE164(firebasePhone);
 
-    if (normalizedBackend !== normalizedFirebase) {
+    if (!normalizedBackend || normalizedBackend !== normalizedFirebase) {
       return res.status(400).json({ message: "Phone number verification mismatch. Please try again." });
     }
 
@@ -279,7 +246,13 @@ const submitForm = async (req, res) => {
 
     // ✅ Validate field lengths
     for (const [field, limit] of Object.entries(FIELD_LIMITS)) {
-      if (formData[field] && formData[field].length > limit) {
+      if (field === 'organizationName' && formData.organization?.name) {
+        if (formData.organization.name.length > limit) {
+          return res.status(400).json({ 
+            message: `Organization name exceeds maximum length of ${limit} characters` 
+          });
+        }
+      } else if (formData[field] && formData[field].length > limit) {
         return res.status(400).json({ 
           message: `${field} exceeds maximum length of ${limit} characters` 
         });
@@ -308,8 +281,8 @@ const submitForm = async (req, res) => {
       return res.status(400).json({ message: 'You have already submitted this form' });
     }
 
-    // ✅ Use standardized phone normalization
-    const normalizedFormPhone = normalizePhone(formData.phone);
+    // ✅ Normalize phone to E.164 (international support)
+    const normalizedFormPhone = normalizeToE164(formData.phone);
     const normalizedVerifiedPhone = log.verifiedPhone || '';
 
     if (!normalizedFormPhone) {
@@ -337,40 +310,113 @@ const submitForm = async (req, res) => {
 
     // NOTE: duplicate checks (email/phone/github) are handled below
 
-    // Organization Type mapping
-    const ORG_TYPE_LABELS = {
-      Government: "Government Organizations (Gov)",
-      NGO: "Non-Governmental Organizations (NGO)",
-      Academic: "Academic",
-      Corporate: "Corporate (For-Profit)",
-      Self: "Self",
-    };
+    // ✅ Validate organization structure
+    if (!formData.organization || !formData.organization.name) {
+      return res.status(400).json({ message: "Organization is required" });
+    }
+
+    // ✅ Accept both 'ref' and 'orgRef' for compatibility
+    const orgRef = formData.organization.orgRef || formData.organization.ref;
+    
+    // ✅ Validate orgRef.type is present
+    if (!orgRef || !orgRef.type) {
+      return res.status(400).json({ message: "Invalid organization reference" });
+    }
+
+    // ✅ Allowed organization types (matching ActiveUser schema)
+   
+
+    let finalOrgType = formData.organization.orgType;
+    let validOrg = null;
+
+    // 🔐 Backend Authority Check - validate against DB
+    if (orgRef.type === "orgs") {
+      if (!orgRef.id) {
+        return res.status(400).json({ message: "Organization ID is required for orgs type" });
+      }
+      validOrg = await Orgs.findOne({ org_id: orgRef.id });
+      if (!validOrg) {
+        return res.status(400).json({ message: "Selected organization not found" });
+      }
+      finalOrgType = validOrg.orgtype;
+      // ✅ Validate orgtype from DB matches allowed values
+      
+    }
+    else if (orgRef.type === "default") {
+      if (!orgRef.id) {
+        return res.status(400).json({ message: "Organization ID is required for default type" });
+      }
+      validOrg = await defaultOrgsCollection.findById(orgRef.id);
+      if (!validOrg) {
+        return res.status(400).json({ message: "Selected organization not found" });
+      }
+      finalOrgType = validOrg.orgType;
+    }
+    else if (orgRef.type === "custom") {
+      // For custom organizations, use the provided orgType
+      finalOrgType = formData.organization.orgType;
+      validOrg = true; // Allow custom organizations
+    }
+    else {
+      return res.status(400).json({ message: "Invalid organization reference type" });
+    }
+
+    // ✅ Validate finalOrgType against allowed values
+    
+
+    // ✅ Defensive validation - prevent source mismatch
+    if (
+      formData.organization.source &&
+      orgRef &&
+      formData.organization.source !== orgRef.type
+    ) {
+      return res.status(400).json({
+        message: "Organization source mismatch"
+      });
+    }
 
     // Role mapping (consistent with SignUpPage)
     const ROLE_MAP = {
-      "R004": "Developer",
-      "R005": "Mentor",
+      "R004": "Developer"
     };
 
-    // ✅ Clean up empty OAuth fields
+    // ✅ Normalize tech stack
+    let normalizedTechStack = [];
+
+    if (Array.isArray(formData.techStack)) {
+      normalizedTechStack = [
+        ...new Set(
+          formData.techStack
+            .map(skill => skill?.trim())
+            .filter(Boolean)
+        )
+      ];
+    }
+
+    // ✅ Clean up empty OAuth fields with proper organization structure
     const cleanedData = {
       fullName: formData.fullName?.trim(),
       email: formData.email?.trim(),
       phone: normalizedFormPhone,
       gender: formData.gender,
-      organisation: formData.organisation?.trim(),
-      orgType: ORG_TYPE_LABELS[formData.orgType] || formData.orgType,
+      organization: {
+        name: formData.organization.name.trim(),
+        ref: orgRef
+      },
+      orgType: finalOrgType,
       role: ROLE_MAP[formData.role] || formData.role,
       githubId: formData.githubId?.trim() || null,
       githubUrl: formData.githubUrl?.trim() || null,
       discordId: formData.discordId?.trim() || null,
       linkedinId: formData.linkedinId?.trim() || null,
+
+      // ✅ Tech skills
+      techStack: normalizedTechStack
     };
     // -----------------------------
     // NEW FLOW: Check duplicates before creating UpdatedData
     // -----------------------------
     const ProdUser = await getProdUserModel();
-    const phoneForUserSchema = normalizePhoneForUser(normalizePhone(cleanedData.phone));
 
     // duplicate checks
     if (cleanedData.email) {
@@ -380,8 +426,8 @@ const submitForm = async (req, res) => {
       }
     }
 
-    if (phoneForUserSchema) {
-      const existingByPhone = await ProdUser.findOne({ phoneNumber: phoneForUserSchema }).lean();
+    if (normalizedFormPhone) {
+      const existingByPhone = await ProdUser.findOne({ phoneNumber: normalizedFormPhone }).lean();
       if (existingByPhone) {
         return res.status(409).json({ message: `User already exists: duplicate_phone`, userId: existingByPhone.userId, existingUser: true });
       }
@@ -798,9 +844,9 @@ const forceSyncUpdatedData = async (req, res) => {
               githubId: data.githubId || null,
               githubUrl: data.githubUrl || null,
               discordId: data.discordId || null,
-              organisation: data.organisation || null,
+              organization: data.organization || null,
               orgType: data.orgType || null,
-              role: entry.user?.role || "Self",
+              roleId: entry.user?.roleId || "R004",
               isPhoneVerified: true,
               updatedAt: new Date()
             }
@@ -840,9 +886,13 @@ const createUserInProduction = async (formData, firebaseToken) => {
       throw new Error('Invalid Firebase token: phone number missing');
     }
     
-    // Normalize and verify phones
-    const formPhone = normalizePhoneForUser(formData.phone);
-    const tokenPhone = normalizePhoneForUser(firebasePhone);
+    // Normalize to E.164 and verify phones
+    const formPhone = normalizeToE164(formData.phone);
+    const tokenPhone = normalizeToE164(firebasePhone);
+    
+    if (!formPhone) {
+      throw new Error('Invalid phone number format');
+    }
     
     // Verify phone matches
     if (formPhone !== tokenPhone) {
@@ -899,8 +949,7 @@ const createUserInProduction = async (formData, firebaseToken) => {
     
     // Role mapping - store roleId in both role and roleId fields (matches signup format)
     const ROLE_MAPPING = {
-      "R004": { role: "R004", roleId: "R004", type: "Developer" },
-      "R005": { role: "R005", roleId: "R005", type: "Mentor" },
+      "R004": { role: "R004", roleId: "R004", type: "Developer" }
     };
     
     const mappedRole = ROLE_MAPPING[formData.role] || {
@@ -921,8 +970,8 @@ const createUserInProduction = async (formData, firebaseToken) => {
       profile: formData.fullName ? `https://avatar.iran.liara.run/public?username=${formData.fullName.trim().replace(/\s+/g, '+')}` : null,
       type: mappedRole.type,
       
-      organization: formData.organisation || null,
-      orgType: formData.orgType || null,
+      organization: formData.organization,
+      orgType: formData.orgType,
       
       isverified: true, // Phone verified via Firebase
       
@@ -934,7 +983,7 @@ const createUserInProduction = async (formData, firebaseToken) => {
       linkedInUrl: formData.linkedinId || null,
       
       passwordHash: null, // OTP login only
-      techStack: [],
+      techStack: formData.techStack || [],
       completedTasks: "0",
       prMerged: "0",
       ranking: 0,
@@ -996,12 +1045,12 @@ const syncToActiveUsers = async (updatedEntry) => {
       // Required fields: Always update if new data present
       fullName: data.fullName || (existingUser?.fullName || "Unknown User"),
       phone: data.phone || existingUser?.phone,
-      role: data.role || updatedEntry.user?.role || existingUser?.role || "Self",
+      roleId: data.roleId || updatedEntry.user?.roleId || existingUser?.roleId || "R004",
 
       // Optional fields: Keep existing if present, otherwise use new
       email: existingUser?.email || data.email || null,
       gender: existingUser?.gender || data.gender || null,
-      organisation: existingUser?.organisation || data.organisation || null,
+      organization: data.organization || existingUser?.organization || null,
       orgType: existingUser?.orgType || data.orgType || null,
 
       // Social fields: Keep non-null values from both
@@ -1009,6 +1058,9 @@ const syncToActiveUsers = async (updatedEntry) => {
       githubUrl: data.githubUrl || existingUser?.githubUrl || null,
       discordId: data.discordId || existingUser?.discordId || null,
       linkedinId: data.linkedinId || existingUser?.linkedinId || null,
+
+      // ✅ Tech skills: Prefer new data, fallback to existing
+      techStack: data.techStack || existingUser?.techStack || [],
     };
 
     // Add non-null fields to update

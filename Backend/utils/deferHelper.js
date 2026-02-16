@@ -44,13 +44,13 @@ const handleDeferredUser = async (user, emailLogId) => {
     
     const html = `
       <h3>Hello ${user.name || "User"},</h3>
-      <p>We noticed you haven't completed your data update form yet.</p>
+      <p>We noticed you haven't completed your C4GT profile setup yet.</p>
       <p>Please take a moment to update your information:</p>
       <p>
         <a href="${link}" target="_blank" 
            style="background-color: #4CAF50; color: white; padding: 14px 20px; 
                   text-decoration: none; border-radius: 4px; display: inline-block;">
-          Update Your Data
+          Complete C4GT Profile
         </a>
       </p>
       <p>This link will expire in 24 hours.</p>
@@ -61,7 +61,7 @@ const handleDeferredUser = async (user, emailLogId) => {
       </p>
     `;
     
-    const emailSent = await sendEmail(user.email, 'Reminder: Update Your Data', html);
+    const emailSent = await sendEmail(user.email, 'C4GT - Complete Your Profile Setup', html);
     console.log('📧 Email sent:', emailSent);
     
     if (emailSent) {

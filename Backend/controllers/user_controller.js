@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { sendRegistrationEmail } from './nodemailer.js';
 import Orgs from '../models/orgs.js';
+import { defaultOrgsCollection } from '../models/defaultOrgs.js';
 const router = express.Router();
 const secretKey = "iedbwb67698$%$#@%^&ghgevhgfi";
 import Project from '../models/projects.js';
@@ -14,7 +15,8 @@ import pgPool from '../config/postgresconf.js';
 import { admin } from '../config/firebaseAdmin.js';
 import logger from '../logger.js';
 import { Logger } from 'winston';
-
+import { sendEmail } from './emailService.js';
+import { generateEmailTemplate } from './emailTemplates.js';
 
 // Postgres pool
 router.use(bodyParser.json());
@@ -92,11 +94,11 @@ async function createCollections() {
     if (usersCount === 0) {
       const basePassword = await bcrypt.hash('rcts', 10);
       const dummyUsers = [
-        { username: 'admin', email: 'admin@gmail.com', phoneNumber: '9000000001', roleId: 'R001' },
-        { username: 'coordinator', email: 'core@gmail.com', phoneNumber: '9000000002', roleId: 'R002' },
-        { username: 'orgmanager', email: 'org@gmail.com', phoneNumber: '9000000003', roleId: 'R003' },
-        { username: 'developer', email: 'dev@gmail.com', phoneNumber: '9000000004', roleId: 'R004' },
-        { username: 'mentor', email: 'mentor@gmail.com', phoneNumber: '9000000005', roleId: 'R005' },
+        { name: 'admin', email: 'admin@gmail.com', phoneNumber: '+919000000001', roleId: 'R001' },
+        { name: 'coordinator', email: 'core@gmail.com', phoneNumber: '+919000000002', roleId: 'R002' },
+        { name: 'orgmanager', email: 'org@gmail.com', phoneNumber: '+919000000003', roleId: 'R003' },
+        { name: 'developer', email: 'dev@gmail.com', phoneNumber: '+919000000004', roleId: 'R004' },
+        { name: 'mentor', email: 'mentor@gmail.com', phoneNumber: '+919000000005', roleId: 'R005' },
       ];
 
       for (const userData of dummyUsers) {
@@ -104,11 +106,25 @@ async function createCollections() {
         const userID = `U${String(userCount + 1).padStart(3, '0')}`;
         await User.create({
           userId: userID,
-          username: userData.username,
-          email: userData.email,
+          name: userData.name,
+          primaryEmail: userData.email,
           phoneNumber: userData.phoneNumber,
           password: basePassword,
-          roleId: userData.roleId
+          
+          organization: {
+            name: "Self",
+            ref: {
+              type: "custom",
+              id: null
+            }
+          },
+          
+          orgType: "Self",
+          
+          role: userData.roleId,
+          roleId: userData.roleId,
+          isverified: true,
+          source: "system"
         });
       }
     }
@@ -447,9 +463,9 @@ export const getContributorById = async (req, res) => {
       ]
     }).lean();
 
-    // -------- COUNT STATUSES --------
+   // -------- COUNT STATUSES --------
     const completedTasks = assignedProjects.filter(
-      p => p.status === "completed"
+      p => p.status === "closed"
     ).length;
 
     const prMerged = assignedProjects.filter(
@@ -457,14 +473,15 @@ export const getContributorById = async (req, res) => {
     ).length;
 
     const ongoing = assignedProjects.filter(
-      p => p.status === "ongoing"
+      p => p.status === "open"
     ).length;
 
     const totalAssigned = assignedProjects.length;
 
     // -------- FETCH ORG DETAILS --------
-    const org = user.organization
-      ? await Orgs.findOne({ org_id: user.organization }).lean()
+    const orgId = user.organization?.ref?.id;
+    const org = orgId
+      ? await Orgs.findOne({ org_id: orgId }).lean()
       : null;
 
     return res.json({
@@ -510,10 +527,10 @@ export const signup = async (req, res) => {
       phoneNumber,
       email,
       organization,
-      orgType,
       role,                // incoming roleId
       firebaseToken,
       githubUrl,
+      githubId,
       discordId,
       linkedInUrl,         // updated field
       techStack,
@@ -529,25 +546,34 @@ export const signup = async (req, res) => {
       });
     }
 
-    // --- Normalize Phone ---
-    const normalizePhone = (num) => {
-      if (!num) return null;
-      let digits = String(num).replace(/\D/g, "");
+    // --- Validate organization structure ---
+    if (!organization || !organization.source || !organization.name || !organization.orgType) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid organization data"
+      });
+    }
 
-      if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
-      if (digits.length === 10) return `+91${digits}`;
-      if (String(num).startsWith("+91") && digits.length === 12) return `+${digits}`;
+    // Validate orgRef structure
+    if (organization.orgRef && !organization.orgRef.type) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid organization reference"
+      });
+    }
 
-      return null;
-    };
-
-    const normalizedPhone = normalizePhone(phoneNumber);
+    // --- Validate E.164 Format ---
+    if (!phoneNumber || !phoneNumber.startsWith("+")) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be in E.164 format (e.g., +14155552671)"
+      });
+    }
 
     // --- Firebase Token Verification ---
     const decoded = await admin.auth().verifyIdToken(firebaseToken);
     console.log(decoded);
-    const firebasePhone = decoded.phone_number
-    const normalizedFirebasePhone = normalizePhone(firebasePhone);
+    const firebasePhone = decoded.phone_number;
 
     if (!firebasePhone) {
       logger.error('Signup failed: Invalid Firebase token. Phone missing.', {
@@ -556,11 +582,11 @@ export const signup = async (req, res) => {
       });
       return res.status(400).json({ success: false, message: "Invalid Firebase token. Phone missing." });
     }
-    if (normalizedPhone !== normalizedFirebasePhone) {
+    if (phoneNumber !== firebasePhone) {
       logger.warn('Signup failed: Phone numbers do not match with Firebase token', {
         phoneNumber,
         endpoint: req.originalUrl,
-        sourceIP: req.ip || req.headers['x-forwarded-for'], // Optional: Add source IP if needed
+        sourceIP: req.ip || req.headers['x-forwarded-for'],
         moreInfo: {
           errorType: "Phone Number Mismatch",
           providedPhoneNumber: phoneNumber,
@@ -578,7 +604,7 @@ export const signup = async (req, res) => {
 
     // --- Check Duplicate Phone ---
     const existingPhone = await User.findOne({
-      phoneNumber: normalizedPhone.replace("+91", ""),
+      phoneNumber: phoneNumber
     });
 
     if (existingPhone)
@@ -599,6 +625,36 @@ export const signup = async (req, res) => {
         return res.status(400).json({ success: false, message: "Provide a valid LinkedIn profile URL (e.g. https://linkedin.com/in/username)." });
       }
       storedLinkedInUrl = String(linkedInUrl).trim();
+    }
+
+    // --- Resolve role name for type (Developer/Mentor/etc.) ---
+    const roleDoc = await Role.findOne({ roleId: role });
+    const resolvedRoleName = roleDoc?.roleName || null;
+
+    // --- Validate and normalize organization data ---
+    let finalOrgType = organization.orgType;
+
+    // 🔐 Backend authority: validate org reference from appropriate collection
+    if (organization.orgRef && organization.orgRef.type === "orgs" && organization.orgRef.id) {
+      const org = await Orgs.findOne({ org_id: organization.orgRef.id });
+      if (!org) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected organization not found"
+        });
+      }
+      // Backend wins - use orgtype from database
+      finalOrgType = org.orgtype;
+    } else if (organization.orgRef && organization.orgRef.type === "default" && organization.orgRef.id) {
+      const defaultOrg = await defaultOrgsCollection.findById(organization.orgRef.id);
+      if (!defaultOrg) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected organization not found"
+        });
+      }
+      // Backend wins - use orgType from database
+      finalOrgType = defaultOrg.orgType;
     }
 
     // ============================================================
@@ -624,19 +680,26 @@ export const signup = async (req, res) => {
       userId,
       name,
       profile: profile || null,
-      type: type || null,
+      type: type || resolvedRoleName || null,
 
       primaryEmail: email || null,
       alternateEmails: email ? [email] : [],
 
-      phoneNumber: normalizedPhone.replace("+91", ""), // store 10 digits only
+      phoneNumber: phoneNumber, // store E.164 format: +14155552671
 
-      organization: organization || null,
-      orgType: orgType || null,
+      organization: {
+        name: organization.name,
+        ref: organization.orgRef || {
+          type: organization.source,
+          id: null
+        }
+      },
+      orgType: finalOrgType,
       isverified: true,
       role,                 // actual role name
       roleId: role,         // roleId stored same (R001, R002 etc.)
       githubUrl: githubUrl || null,
+      githubId: githubId || null,
       discordId: discordId || null,
       linkedInUrl: storedLinkedInUrl || null,
       techStack: techStack || [],
@@ -646,6 +709,20 @@ export const signup = async (req, res) => {
       rating: 0,
       source: "signup",
     });
+     if (email) {
+      try {
+        const { subject, html } = generateEmailTemplate('signup', name);
+        await sendEmail(email, subject, null, html);
+      } catch (emailErr) {
+        // Log email failure but don't block signup
+        logger.warn('Signup email failed', {
+          email,
+          error: emailErr.message,
+          userId: newUser.userId,
+        });
+        // Optionally: notify admin or retry later
+      }
+    }
 
 
     // --- Create JWT Token ---
@@ -684,7 +761,7 @@ export const signup = async (req, res) => {
         email: newUser.primaryEmail,
         roleId: newUser.roleId,
         permissions: rolePermissions?.permissionId || [],
-        orgId: newUser.organization || null,
+        orgId: newUser.organization?.ref?.id || null,
       }
     });
 
@@ -711,45 +788,29 @@ export const loginWithOtp = async (req, res) => {
   try {
 
     const { firebaseToken } = req.body;
-    const phoneRaw = req.body.phoneNumber || req.body.phone;
-    logger.warn("Login request is recieved ", { sourceIP: req.ip, endpoint: req.originalUrl, phoneNumber: phoneRaw })
+    const phoneNumber = req.body.phoneNumber || req.body.phone;
+    logger.warn("Login request is recieved ", { sourceIP: req.ip, endpoint: req.originalUrl, phoneNumber: phoneNumber })
 
-    if (!phoneRaw || !firebaseToken) {
-      logger.warn("Phone Number and Firebase token are required", { sourceIP: req.ip, endpoint: req.originalUrl, phoneNumber: phoneRaw })
+    if (!phoneNumber || !firebaseToken) {
+      logger.warn("Phone Number and Firebase token are required", { sourceIP: req.ip, endpoint: req.originalUrl, phoneNumber: phoneNumber })
       return res.status(400).json({
         success: false,
         message: "Phone number and Firebase token are required",
       });
     }
 
-    // --- Normalize Phone Function (Final Correct Version) ---
-    const normalizePhone = (num) => {
-      if (!num) return null;
-      let digits = String(num).replace(/\D/g, "");
-
-      // If starts with 91XXXXXXXXXX (12 digits)
-      if (digits.startsWith("91") && digits.length === 12) {
-        return `+${digits}`;
-      }
-      // If 10 digits
-      if (digits.length === 10) {
-        return `+91${digits}`;
-      }
-      // If already +91XXXXXXXXXX
-      if (String(num).startsWith("+91") && digits.length === 12) {
-        return `+${digits}`;
-      }
-
-      return null;
-    };
-
-    const normalizedPhone = normalizePhone(phoneRaw);
+    // --- Validate E.164 Format ---
+    if (!phoneNumber.startsWith("+")) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be in E.164 format (e.g., +14155552671)",
+      });
+    }
 
     // --- Decode Firebase Token ---
     const decoded = await admin.auth().verifyIdToken(firebaseToken);
 
     const firebasePhone = decoded.phone_number;
-    const normalizedFirebasePhone = normalizePhone(firebasePhone);
 
     if (!firebasePhone) {
       return res.status(400).json({
@@ -758,21 +819,16 @@ export const loginWithOtp = async (req, res) => {
       });
     }
 
-    if (normalizedPhone !== normalizedFirebasePhone) {
+    if (phoneNumber !== firebasePhone) {
       return res.status(400).json({
         success: false,
         message: "Phone numbers do not match with Firebase token",
       });
     }
 
-    // --- DB User Lookup (supports both +91 and raw number formats) ---
+    // --- DB User Lookup (exact E.164 match) ---
     let user = await User.findOne({
-      $or: [
-        { phoneNumber: normalizedPhone },                   // +919110791397
-        { phoneNumber: phoneRaw },                          // +919110791397
-        { phoneNumber: normalizedPhone.replace("+91", "") }, // 9110791397
-        { phoneNumber: phoneRaw.replace("+91", "") },        // 9110791397
-      ]
+      phoneNumber: phoneNumber
     });
 
     if (!user) {
@@ -802,6 +858,8 @@ export const loginWithOtp = async (req, res) => {
         userId: user.userId,
         phoneNumber: user.phoneNumber,
         role: user.roleId,
+        primaryEmail: user.primaryEmail || null,
+        name: user.name || null,  
       },
       secretKey,
       { expiresIn: "24h" }
@@ -816,6 +874,19 @@ export const loginWithOtp = async (req, res) => {
         role: role?.roleId || user.roleId,
       }
     });
+     if (user.primaryEmail) {
+      try {
+        const { subject, html } = generateEmailTemplate('login', user.name || 'User');
+        await sendEmail(user.primaryEmail, subject, null, html);
+      } catch (emailErr) {
+        logger.warn('Login email failed', {
+          email: user.primaryEmail,
+          error: emailErr.message,
+          userId: user.userId,
+        });
+      }
+    }
+
 
     // --- Final Response With ALL Required Data ---
     return res.json({
@@ -851,119 +922,129 @@ export const loginWithOtp = async (req, res) => {
 
 
 export const requestOtp = async (req, res) => {
+  const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   try {
     const { phone, email } = req.body;
-    logger.info('OTP request received', {
+
+    // 🔹 Incoming request log
+    logger.info("OTP request received", {
+      requestId,
       endpoint: req.originalUrl,
-      sourceIP: req.ip || req.headers['x-forwarded-for'] || 'unknown',
-      phoneNumber: req.body.phone,
-      email: req.body.email,
-      method:req.method,
-
-    });
-    if (!phone) return res.status(400).json({ message: "Phone number required" });
-
-    const normalizePhone = (num) => {
-      if (!num) return null;
-      const digits = String(num).replace(/\D/g, "");
-      return `+91${digits.replace(/^91/, "")}`;
-    };
-
-    const normalizedPhone = normalizePhone(phone);
-
-    // Check DB for phone number
-    const userByPhone = await User.findOne({
-      $or: [
-        { phoneNumber: normalizedPhone }, // +91 format
-        { phoneNumber: phone }            // raw DB format "9000000001"
-      ]
+      method: req.method,
+      sourceIP: req.ip || req.headers["x-forwarded-for"] || "unknown",
+      phoneProvided: !!phone,
+      emailProvided: !!email,
     });
 
-    // Check DB for email (only if email is provided)
+    // 🔴 Validation: phone missing
+    if (!phone) {
+      logger.warn("OTP request failed: phone missing", { requestId });
+
+      return res.status(400).json({
+        exists: false,
+        error: "PHONE_REQUIRED",
+        message: "Phone number is required",
+      });
+    }
+
+    // 🔴 Validation: E.164 format
+    if (!phone.startsWith("+")) {
+      logger.warn("OTP request failed: invalid phone format", {
+        requestId,
+        phone,
+      });
+
+      return res.status(400).json({
+        exists: false,
+        error: "INVALID_PHONE_FORMAT",
+        message: "Enter a valid phone number with country code",
+      });
+    }
+
+    // 🔍 Check phone
+    const userByPhone = await User.findOne({ phoneNumber: phone });
+
+    // 🔍 Check email (optional)
     let userByEmail = null;
     if (email) {
       const emailLower = email.toLowerCase().trim();
       userByEmail = await User.findOne({
-        $or: [
-          { primaryEmail: emailLower },
-          { alternateEmails: emailLower }
-        ]
+        $or: [{ primaryEmail: emailLower }, { alternateEmails: emailLower }],
       });
     }
 
-    // Determine response based on what exists
+    // 🟡 Both phone & email exist
     if (userByPhone && userByEmail) {
-      logger.info('User exists with both phone and email', {
-        phoneNumber: phone,
-        email: email,
-        endpoint: req.originalUrl,
-        sourceIP: req.ip
+      logger.info("OTP precheck: phone and email exist", {
+        requestId,
+        userId: userByPhone.userId,
       });
 
-      return res.status(200).json({
-        message: "Phone and email already registered. Please sign in.",
-        mode: "signin",
+      return res.json({
         exists: true,
+        mode: "signin",
         reason: "both",
-        sourceIp: req.ip
+        message: "Phone and email already registered. Please sign in.",
       });
     }
 
+    // 🟡 Phone exists
     if (userByPhone) {
-      logger.info('User exists with phone number', {
-        phoneNumber: phone,
-        endpoint: req.originalUrl,
-        sourceIP: req.ip
+      logger.info("OTP precheck: phone exists", {
+        requestId,
+        userId: userByPhone.userId,
       });
 
-      return res.status(200).json({
-        message: "Phone number already registered. Please sign in.",
-        mode: "signin",
+      return res.json({
         exists: true,
+        mode: "signin",
         reason: "phone",
-        sourceIp: req.ip
+        message: "Phone number already registered. Please sign in.",
       });
     }
 
+    // 🟡 Email exists
     if (userByEmail) {
-      logger.info('User exists with email', {
-        email: email,
-        endpoint: req.originalUrl,
-        sourceIP: req.ip
+      logger.info("OTP precheck: email exists", {
+        requestId,
+        email,
       });
 
-      return res.status(200).json({
-        message: "Email already registered. Please sign in or use a different email.",
-        mode: "signin",
+      return res.json({
         exists: true,
+        mode: "signin",
         reason: "email",
-        sourceIp: req.ip
+        message: "Email already registered. Please sign in or use another email.",
       });
     }
 
-    logger.info('User not found. Proceeding with signup and Firebase OTP verification.', {
-      phoneNumber: phone,
-      email: email,
-      endpoint: req.originalUrl
+    // 🟢 New user
+    logger.info("OTP precheck: new user, proceed with signup", {
+      requestId,
+      phone,
+      emailProvided: !!email,
     });
 
-    return res.status(200).json({
-      message: "User not found. Proceed with signup and Firebase OTP verification.",
+    return res.json({
+      exists: false,
       mode: "signup",
-      exists: false
+      message: "User not found. Proceed with signup.",
     });
 
   } catch (err) {
-    logger.error('Error processing OTP request', {
+    logger.error("OTP request failed: server error", {
+      requestId,
       error: err.message,
       stack: err.stack,
-      phoneNumber: req.body.phone,
       endpoint: req.originalUrl,
-      method:req.method
-
     });
-    console.error("requestOtp:", err);
-    return res.status(500).json({ message: "Server error" });
+
+    return res.status(500).json({
+      exists: false,
+      error: "SERVER_ERROR",
+      message: "Something went wrong. Please try again later.",
+    });
   }
 };
 
@@ -1053,6 +1134,22 @@ export const editProfile = async (req, res) => {
         error: `User ${userId} not found`
       });
     }
+    const emailToSend = updatedUser.primaryEmail || existingUser.primaryEmail;
+    if (emailToSend) {
+      try {
+        const userName = updatedUser.name || existingUser.name || 'User';
+        const { subject, html } = generateEmailTemplate('edit-profile', userName);
+        await sendEmail(emailToSend, subject, null, html);
+      } catch (emailErr) {
+        logger.warn('Edit profile email failed', {
+          email: emailToSend,
+          error: emailErr.message,
+          userId,
+        });
+      
+      }
+    }
+
     logger.info('Profile Updated successfully', {
       endpoint: req.originalUrl,
       method:req.method,

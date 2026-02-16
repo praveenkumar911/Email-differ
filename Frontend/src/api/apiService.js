@@ -4,7 +4,7 @@ import axios from "axios";
 // 🌍 Base URL setup (local + production)
 // Allow env to provide http://localhost:8000 or http://10.8.0.15:8000/api
 const rawBase =
-  process.env.VITE_REACT_APP_API_BASE_URL || "https://pl-api.iiit.ac.in/rcts/account-setup/api";
+  process.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8000/api";
 
 // Ensure baseURL always ends with /api
 const normalized = (() => {
@@ -12,7 +12,7 @@ const normalized = (() => {
     const trimmed = String(rawBase).replace(/\/+$/, "");
     return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
   } catch {
-    return "https://pl-api.iiit.ac.in/rcts/account-setup/api";
+    return "http://localhost:8000/api";
   }
 })();
 
@@ -116,13 +116,34 @@ export const verifyOtp = async (payload) => {
     throw err.response?.data || { message: "Server error" };
   }
 };
+// Search organizations by query string
+export const searchOrgs = async (query) => {
+  try {
+    const res = await API.get('/orgs/query', {
+      params: { q: query }
+    });
+    return res.data.results || [];
+  } catch (err) {
+    console.error('❌ searchOrgs error:', err.response?.data || err.message);
+    throw err.response?.data || { message: 'Server error' };
+  }
+};
+
 
 
 // 4️⃣ Alias for backward compatibility
 export const verifyLoginOtp = async (payload) => {
   return verifyOtp(payload);
 };
-
+export const fetchDefaultOrgs = async () => {
+  try {
+    const res = await API.get('/defaultOrgs');
+    return res.data; // { organizations: [...], roles: [...] }
+  } catch (err) {
+    console.error('❌ fetchDefaultOrgs error:', err.response?.data || err.message);
+    throw err.response?.data || { message: 'Server error' };
+  }
+};
 
 // 5️⃣ Protected route example (for later role-based auth)
 export const getProtectedData = async (token) => {

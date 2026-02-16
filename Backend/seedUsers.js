@@ -13,12 +13,12 @@ mongoose
 
 // Dummy Users
 const dummyUsers = [
-  { name: "Alice Johnson", email: "sampathchowdarie@gmail.com", phone: "1234567890", githubId: "alicej", githubUrl: "https://github.com/alicej", discordId: "alice#1234" },
- { name: "Bob Smith", email: "bhanuprabhas62@gmail.com", phone: "0987654321", githubId: "bobsmith", githubUrl: "https://github.com/bobsmith", discordId: "bob#5678" },
+  { name: "Alice Johnson", email: "praveenkumarpalaboyina@gmail.com", phone: "1234567890", githubId: "alicej", githubUrl: "https://github.com/alicej", discordId: "alice#1234" },
+ { name: "Bob Smith", email: "sampathchowdarie@gmail.com", phone: "0987654321", githubId: "bobsmith", githubUrl: "https://github.com/bobsmith", discordId: "bob#5678" },
   { name: "Charlie Brown", email: "kolllipavan753@gmail.com", phone: "5555555555", githubId: "charlieb", githubUrl: "https://github.com/charlieb", discordId: "charlie#9012" },
-  { name: "Diana Prince", email: "saikumarpola4@gmail.com", phone: "4444444444", githubId: "dianap", githubUrl: "https://github.com/dianap", discordId: "diana#3456" },
-  { name: "Ethan Hunt", email: "ajaysigiredy908@gmail.com", phone: "3333333333", githubId: "ethanh", githubUrl: "https://github.com/ethanh", discordId: "ethan#7890" },
-  { name: "Fiona Gallagher", email: "praveenkumarpalaboyina@gmail.com", phone: "2222222222", githubId: "fionag", githubUrl: "https://github.com/fionag", discordId: "fiona#2345" },
+  { name: "Bhanu Gunnam", email: "bhavani.gunnam@research.iiit.ac.in", phone: "4444444444", githubId: "dianap", githubUrl: "https://github.com/dianap", discordId: "diana#3456" },
+   { name: "Ethan Hunt", email: "ajaysigiredy908@gmail.com", phone: "3333333333", githubId: "ethanh", githubUrl: "https://github.com/ethanh", discordId: "ethan#7890" },
+  // { name: "Fiona Gallagher", email: "praveenkumarpalaboyina@gmail.com", phone: "2222222222", githubId: "fionag", githubUrl: "https://github.com/fionag", discordId: "fiona#2345" },
 
 ];
 

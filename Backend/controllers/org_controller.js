@@ -3,6 +3,8 @@ import Orgs from '../models/orgs.js'; // Added .js extension
 import Project from '../models/projects.js'; // Added .js extension
 import { User } from '../models/usercollection.js'; // Added .js extension
 import { defaultOrgsCollection, seedOrganizations } from '../models/defaultOrgs.js';
+import logger from '../logger.js';
+import { Role } from '../models/usercollection.js';
 
 async function syncOrgs() {
   try {
@@ -16,29 +18,29 @@ async function syncOrgs() {
 
     for (const row of dmpRes.rows) {
       const rawId = String(row.id);
-      const orgId = `ORG${rawId}`; // ← ORG96
+      const orgId = `ORG${rawId}`;
       const createdAt = row.created_at ? new Date(row.created_at).toISOString() : null;
 
       const doc = {
-        org_id: orgId, // ← NOW: ORG96
+        org_id: orgId,
         orgName: row.name ?? null,
         description: row.description ?? null,
         created_at: createdAt,
         githubUrl: row.github_url ?? null,
         contact: null,
         orgtype: null,
-        domain:null,
-        TechStack: [],
+        domain: null,
+        techStack: [],
         projects: [],
         ranking: 0,
         rating: 0,
-        source: 'DMP'
+        source: ["DMP"]   // ✅ ARRAY
       };
 
       ops.push({
         updateOne: {
-          filter: { org_id: orgId }, // ← Match on ORG96
-          update: { $setOnInsert: doc },
+          filter: { org_id: orgId },
+          update: { $setOnInsert: doc },  // ✅ existing data NOT touched
           upsert: true
         }
       });
@@ -51,28 +53,28 @@ async function syncOrgs() {
 
     for (const row of communityRes.rows) {
       const rawId = String(row.id);
-      const orgId = `ORG${rawId}`; // ← ORG1
+      const orgId = `ORG${rawId}`;
 
       const doc = {
-        org_id: orgId, // ← NOW: ORG1
+        org_id: orgId,
         orgName: row.name ?? null,
         description: null,
         created_at: null,
         githubUrl: null,
         contact: null,
         orgtype: null,
-        domain:null,
-        TechStack: [],
+        domain: null,
+        techStack: [],
         projects: [],
         ranking: 0,
         rating: 0,
-        source: 'community'
+        source: ["Community"]   // ✅ ARRAY
       };
 
       ops.push({
         updateOne: {
-          filter: { org_id: orgId }, // ← Match on ORG1
-          update: { $setOnInsert: doc },
+          filter: { org_id: orgId },
+          update: { $setOnInsert: doc },  // ✅ existing data NOT touched
           upsert: true
         }
       });
@@ -92,46 +94,64 @@ async function syncOrgs() {
     return { success: false, error: error.message };
   }
 }
-
-
+// ========================= GET ALL ORGS =========================
+// ========================= GET ALL ORGS =========================
 export const getAllOrgs = async (req, res) => {
   try {
     const orgs = await Orgs.find({}).lean();
     const projects = await Project.find({}).select("owner status").lean();
 
-    const techSkills = {};
-    const domainGroups = {};
+    const techSkills = {
+      dmp: { skills: [] },
+      community: { skills: [] }
+    };
+
+    const domainGroups = {
+      dmp: { domains: [] },
+      community: { domains: [] }
+    };
+
+    // -------- NORMALIZE SOURCE ----------
+    const normalizeSources = (src) => {
+      let arr = [];
+
+      if (Array.isArray(src)) arr = src;
+      else if (typeof src === "string") arr = src.split(",");
+
+      return arr
+        .map(s => s.trim().toLowerCase())
+        .filter(s => s === "dmp" || s === "community");
+    };
 
     orgs.forEach(org => {
-      const source = (org.source || "unknown").trim().toLowerCase();
+      const sources = normalizeSources(org.source);
+      const finalSources = sources.length ? sources : ["community"];
 
-      if (!techSkills[source]) techSkills[source] = { skills: [] };
-      if (!domainGroups[source]) domainGroups[source] = { domains: [] };
+      finalSources.forEach(source => {
 
-      // ---- TECH STACK EXACT FROM DB ----
-      if (Array.isArray(org.techStack)) {
-        org.techStack.forEach(s => {
-          const skill = s?.toLowerCase();
-          if (skill && !techSkills[source].skills.includes(skill)) {
-            techSkills[source].skills.push(skill);
+        // ---- TECH STACK ----
+        if (Array.isArray(org.techStack)) {
+          org.techStack.forEach(s => {
+            const skill = s?.toLowerCase();
+            if (skill && !techSkills[source].skills.includes(skill)) {
+              techSkills[source].skills.push(skill);
+            }
+          });
+        }
+
+        // ---- DOMAINS ----
+        let domainList = [];
+        if (Array.isArray(org.domain)) domainList = org.domain;
+        else if (typeof org.domain === "string") {
+          domainList = org.domain.split(",").map(d => d.trim());
+        }
+
+        domainList.forEach(d => {
+          const dom = d?.toLowerCase();
+          if (dom && !domainGroups[source].domains.includes(dom)) {
+            domainGroups[source].domains.push(dom);
           }
         });
-      }
-
-      // ---- DOMAINS FIX: SUPPORT STRING + ARRAY ----
-      let domainList = [];
-
-      if (Array.isArray(org.domain)) {
-        domainList = org.domain;
-      } else if (typeof org.domain === "string") {
-        domainList = org.domain.split(",").map(d => d.trim());
-      }
-
-      domainList.forEach(d => {
-        const dom = d?.toLowerCase();
-        if (dom && !domainGroups[source].domains.includes(dom)) {
-          domainGroups[source].domains.push(dom);
-        }
       });
     });
 
@@ -140,7 +160,7 @@ export const getAllOrgs = async (req, res) => {
 
     projects.forEach(p => {
       const owner = p.owner || "ORG_UNKNOWN";
-      const status = (p.status || "unknown").toLowerCase();
+      const status = (p.status || "inactive").toLowerCase(); // open | closed | inactive
 
       if (!orgProjectMap[owner]) orgProjectMap[owner] = [];
       orgProjectMap[owner].push(status);
@@ -150,31 +170,36 @@ export const getAllOrgs = async (req, res) => {
       const orgId = org.org_id;
       const statuses = orgProjectMap[orgId] || [];
 
-      const ongoing = statuses.filter(s => s === "ongoing" || s === "open").length;
-      const completed = statuses.filter(s => s === "completed" || s === "closed").length;
-      const prMerged = statuses.filter(s => s === "prmerged").length;
+      const open = statuses.filter(s => s === "open").length;
+      const closed = statuses.filter(s => s === "closed").length;
+      const inactive = statuses.filter(s => s === "inactive").length;
 
-      let projectStatus = "unknown";
-      if (ongoing > 0) projectStatus = "ongoing";
-      else if (prMerged > 0) projectStatus = "prMerged";
-      else if (completed === statuses.length && completed > 0) projectStatus = "completed";
+      let projectStatus = "inactive";
+      if (open > 0) projectStatus = "open";
+      else if (closed === statuses.length && closed > 0) projectStatus = "closed";
+      else if (inactive > 0) projectStatus = "inactive";
 
       return {
         ...org,
         projectStatus,
         totalProjects: statuses.length,
-        ongoingCount: ongoing,
-        completedCount: completed,
-        prMergedCount: prMerged
+        openCount: open,
+        closedCount: closed,
+        inactiveCount: inactive
       };
     });
 
-    // ---- RESPONSE ----
     return res.json({
       success: true,
       totalOrgs: updatedOrgs.length,
-      techSkills,
-      domains: domainGroups,
+      techSkills: {
+        dmp: techSkills.dmp,
+        community: techSkills.community
+      },
+      domains: {
+        dmp: domainGroups.dmp,
+        community: domainGroups.community
+      },
       orgs: updatedOrgs
     });
 
@@ -185,11 +210,13 @@ export const getAllOrgs = async (req, res) => {
 };
 
 
+
+// ========================= GET ORG BY ID =========================
 export const getOrgById = async (req, res) => {
   try {
     const { orgId } = req.params;
 
-    // Step 1: Find Org
+    // -------- FIND ORG --------
     const org = await Orgs.findOne({ org_id: orgId }).lean();
     if (!org) {
       return res.status(404).json({
@@ -198,42 +225,58 @@ export const getOrgById = async (req, res) => {
       });
     }
 
-    // Step 2: Get projects belonging to org
+    // -------- FIND PROJECTS --------
     const projects = await Project.find({ owner: orgId }).lean();
 
-    // Counters
-    let openTasks = 0;       // ongoing
-    let completedTasks = 0;  // completed
-    let prMergedTasks = 0;   // prMerged
+    // -------- COUNTERS --------
+    let openTasks = 0;
+    let closedTasks = 0;
+    let inactiveTasks = 0;
 
-    // Normalize statuses and count
-    projects.forEach(p => {
-      const status = (p.status || "").toLowerCase();
+    // -------- NORMALIZE SOURCE (ORG) --------
+    const normalizeSource = (src) => {
+      if (Array.isArray(src)) return src.map(s => s.trim());
+      if (typeof src === "string") return src.split(",").map(s => s.trim());
+      return [];
+    };
 
-      if (status === "ongoing" || status === "open") {
-        openTasks++;
-      } else if (status === "completed" || status === "closed") {
-        completedTasks++;
-      } else if (status === "prmerged") {
-        prMergedTasks++;
+    // -------- PROCESS PROJECTS --------
+    const processedProjects = projects.map(p => {
+      // strict normalize
+      let status = (p.status || "").toString().trim().toLowerCase();
+
+      // enforce enum
+      if (status !== "open" && status !== "closed" && status !== "inactive") {
+        status = "inactive"; // safety fallback
       }
+
+      // ---- COUNTERS ----
+      if (status === "open") openTasks++;
+      else if (status === "closed") closedTasks++;
+      else inactiveTasks++;
+
+      return {
+        ...p,
+        status
+      };
     });
 
-    // Prepare final response
+    // -------- FINAL RESPONSE --------
     const result = {
       success: true,
 
       org: {
         ...org,
-        openTasks,        // ongoing
-        completedTasks,   // completed
-        prMergedTasks,
+        source: normalizeSource(org.source),
 
-        // Attach projects
-        projects: projects.map(p => ({
+        openTasks,
+        closedTasks,
+        inactiveTasks,
+
+        projects: processedProjects.map(p => ({
           project_id: p.project_id,
           projectName: p.projectName,
-          status: p.status,
+          status: p.status,          // ✅ open | closed | inactive
           source: p.source,
           githubUrl: p.githubUrl,
           created_at: p.created_at,
@@ -245,12 +288,13 @@ export const getOrgById = async (req, res) => {
         }))
       },
 
-      totalProjects: projects.length,
+      totalProjects: processedProjects.length,
 
-      // Status Summary
-      
-             // prMerged
-      
+      statusSummary: {
+        open: openTasks,
+        closed: closedTasks,
+        inactive: inactiveTasks
+      }
     };
 
     return res.json(result);
@@ -260,6 +304,11 @@ export const getOrgById = async (req, res) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
+
+
+
 
 
 export const editOrg = async (req, res) => {
@@ -325,6 +374,24 @@ export const editOrg = async (req, res) => {
         message: `Org with ID ${orgId} not found`
       });
     }
+    const userEmail = req.user?.primaryEmail;
+    const userName = req.user?.name || 'User';
+
+    if (userEmail) {
+      try {
+        const { subject, html } = generateEmailTemplate('edit-org', userName);
+        await sendEmail(userEmail, subject, null, html);
+      } catch (emailErr) {
+        logger.warn('Organization edit email failed', {
+          email: userEmail,
+          error: emailErr.message,
+          userId: req.user?.userId,
+          orgId,
+        });
+        // Non-blocking: org still updates even if email fails
+      }
+    }
+
     logger.info("Organization updated successfully",{
       endpoint:req.originalUrl,
       method:req.method,
@@ -336,6 +403,7 @@ export const editOrg = async (req, res) => {
         
       }
     })
+
     return res.json({
       success: true,
       message: "Organization updated successfully",
@@ -499,11 +567,17 @@ export const getOrgMentorsbyuserId = async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 };
+async function getRolesExcludingAdminAndCoordinator() {
+  const roles = await Role.find(); 
+  const filteredRoles = roles.filter(role => role.roleName !== "Admin" && role.roleName !== "ProgramCoordinator");
+  return filteredRoles;
+}
 async function getDefaultAllOrgs(req, res) {
   try {
     
-    const orgs = await DefaultOrgs.find();
+    const orgs = await defaultOrgsCollection.find();
     
+    const roles = await getRolesExcludingAdminAndCoordinator();
 
     
     if (orgs.length === 0) {
@@ -513,7 +587,7 @@ async function getDefaultAllOrgs(req, res) {
     }
 
     // Return the organizations
-    res.status(200).json({ organizations: orgs });
+    res.status(200).json({ organizations: orgs, roles: roles });
   } catch (err) {
     console.error('Error fetching organizations:', err);
     res.status(500).json({ message: 'Server error' });
@@ -521,5 +595,99 @@ async function getDefaultAllOrgs(req, res) {
 }
 
 
+export async function searchOrgs(req, res) {
+  try {
+    const { q } = req.query;
 
-export default { syncOrgs, getAllOrgs, getOrgById, editOrg, getOrgDevelopersbyuserId, getOrgMentorsbyuserId ,getDefaultAllOrgs};
+    // If no query → return default orgs + "Other" option
+    if (!q || q.trim() === "") {
+      const defaults = await defaultOrgsCollection.find()
+        .select("_id orgName orgType")
+        .limit(20)
+        .lean();
+
+      const defaultResults = defaults.map(o => ({
+        label: o.orgName,
+        source: "default",
+        orgRef: {
+          type: "default",
+          id: o._id.toString()
+        },
+        orgType: o.orgType || ""
+      }));
+
+      return res.status(200).json({ 
+        results: [
+          ...defaultResults,
+          {
+            label: "Other",
+            source: "custom",
+            orgRef: { type: "custom", id: null },
+            orgType: ""
+          }
+        ]
+      });
+    }
+
+    const regex = new RegExp(q.trim(), "i");   // case-insensitive search
+
+    // 🔹 Search Orgs collection
+    const orgs = await Orgs.find({
+      orgName: { $regex: regex }
+    })
+    .select("org_id orgName orgtype")
+    .limit(10)
+    .lean();
+
+    const orgResults = orgs.map(o => ({
+      label: o.orgName,
+      source: "orgs",
+      orgRef: {
+        type: "orgs",
+        id: o.org_id
+      },
+      orgType: o.orgtype || ""
+    }));
+
+    // 🔹 Search default_orgs collection
+    const defaults = await defaultOrgsCollection.find({
+      orgName: { $regex: regex }
+    })
+    .select("_id orgName orgType")
+    .limit(10)
+    .lean();
+
+    const defaultResults = defaults.map(o => ({
+      label: o.orgName,
+      source: "default",
+      orgRef: {
+        type: "default",
+        id: o._id.toString()
+      },
+      orgType: o.orgType || ""
+    }));
+
+    // 🔹 Merge results + always add "Other" option
+    return res.status(200).json({
+      results: [
+        ...orgResults,
+        ...defaultResults,
+        {
+          label: "Other",
+          source: "custom",
+          orgRef: { type: "custom", id: null },
+          orgType: ""
+        }
+      ]
+    });
+
+  } catch (err) {
+    console.error("Error in searchOrgs:", err);
+    return res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
+}
+
+export default { syncOrgs, getAllOrgs, getOrgById, editOrg, getOrgDevelopersbyuserId, getOrgMentorsbyuserId ,getDefaultAllOrgs, searchOrgs};
