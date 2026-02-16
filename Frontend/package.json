@@ -1,9 +1,10 @@
 {
   "name": "frontend",
-  "homepage": "http://pl-app.iiit.ac.in/rcts/codeforgovtech",
+  "homepage": "http://pl-app.iiit.ac.in/rcts/account-setup",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "-": "^0.0.1",
     "@aws-sdk/client-s3": "^3.948.0",
     "@dr.pogodin/react-helmet": "^3.0.4",
     "@emotion/react": "^11.14.0",
