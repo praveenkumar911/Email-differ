@@ -12,7 +12,7 @@ const normalized = (() => {
     const trimmed = String(rawBase).replace(/\/+$/, "");
     return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
   } catch {
-    return "http://localhost:8000/api";
+    return "https://pl-api.iiit.ac.in/rcts/account-setup/api";
   }
 })();
 
