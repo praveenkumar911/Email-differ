@@ -57,6 +57,8 @@ const userSchema = new mongoose.Schema({
   rating: Number,
   // assignedTasks: [{ type: String }],
   source: String,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const permissionsExtraSchema = new mongoose.Schema({

@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/rcts/account-setup/static/css/main.7152e56c.css",
-    "main.js": "/rcts/account-setup/static/js/main.1c2fd2aa.js",
+    "main.js": "/rcts/account-setup/static/js/main.39c1d241.js",
     "static/js/963.0d6de24d.chunk.js": "/rcts/account-setup/static/js/963.0d6de24d.chunk.js",
     "static/js/453.20359781.chunk.js": "/rcts/account-setup/static/js/453.20359781.chunk.js",
     "static/media/header-background.png": "/rcts/account-setup/static/media/header-background.50281072358f6516def9.png",
@@ -15,12 +15,12 @@
     "static/media/org_logo_fallback.png": "/rcts/account-setup/static/media/org_logo_fallback.b62504e9f920ea0f0788.png",
     "index.html": "/rcts/account-setup/index.html",
     "main.7152e56c.css.map": "/rcts/account-setup/static/css/main.7152e56c.css.map",
-    "main.1c2fd2aa.js.map": "/rcts/account-setup/static/js/main.1c2fd2aa.js.map",
+    "main.39c1d241.js.map": "/rcts/account-setup/static/js/main.39c1d241.js.map",
     "963.0d6de24d.chunk.js.map": "/rcts/account-setup/static/js/963.0d6de24d.chunk.js.map",
     "453.20359781.chunk.js.map": "/rcts/account-setup/static/js/453.20359781.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.7152e56c.css",
-    "static/js/main.1c2fd2aa.js"
+    "static/js/main.39c1d241.js"
   ]
 }
