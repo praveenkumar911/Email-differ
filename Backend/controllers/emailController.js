@@ -3,6 +3,7 @@ import EmailUser from "../models/EmailUsers.js";
 import DeferredData from "../models/DeferredData.js";
 import UpdatedData from "../models/UpdatedData.js";
 import EmailLog from "../models/EmailLog.js";
+import InactiveUser from "../models/InactiveUser.js";
 import sendEmail from "../utils/nodemailer.js";
 import { generateToken } from "../utils/tokenUtils.js";
 
@@ -11,70 +12,80 @@ import { generateToken } from "../utils/tokenUtils.js";
 // ------------------------------
 const sendFormEmails = async (req, res) => {
   try {
-    const users = await EmailUser.find();
-    let sentCount = 0;
+    const onlyUnsent = req.query.onlyUnsent === 'true';
+    console.log(`Batch mode: ${onlyUnsent ? 'Only unsent users' : 'All eligible users'}`);
 
-    // ✅ Rate limiting helper
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const usersQuery = onlyUnsent
+      ? { lastEmailSent: null }
+      : {};
 
-    for (let i = 0; i < users.length; i++) {
-      const user = users[i];
-      // ✅ Skip if user opted out
-      if (user.isOptedOut) {
-        console.log(`🚫 Skipping ${user.email} — user opted out`);
-        continue;
-      }
+    const users = await EmailUser.find(usersQuery).lean(); // fast, read-only
+    console.log(`Found ${users.length} users to process`);
 
-      // ✅ Skip if already updated
-      const updated = await UpdatedData.findOne({ user: user._id });
-      if (updated) {
-        console.log(`⏭️  Skipping ${user.email} — already submitted`);
-        continue;
-      }
+    // Immediate response — client doesn't wait
+    res.status(202).json({
+      message: "Email batch started in background",
+      totalUsers: users.length,
+      mode: onlyUnsent ? 'onlyUnsent' : 'all',
+      startedAt: new Date().toISOString()
+    });
 
-      // ✅ Check if deferred - send email if under 3 attempts
-      const deferred = await DeferredData.findOne({ user: user._id });
-      if (deferred) {
-        if (deferred.attempts >= 3) {
-          console.log(`🚫 Skipping ${user.email} — max attempts reached`);
-          continue;
-        }
-        // ✅ Allow sending to deferred users (they'll get reminder logic)
-        console.log(`🔄 Sending to deferred user ${user.email} (attempt ${deferred.attempts + 1}/3)`);
-      }
+    // Background task
+    (async () => {
+      try {
+        let sentCount = 0;
+        const delay = ms => new Promise(r => setTimeout(r, ms));
 
-      // ✅ Collect all email addresses for this user (primary + alternates)
-      const emailsToSend = [];
-      if (user.email) {
-        emailsToSend.push(user.email);
-      }
-      if (user.alternateEmails && user.alternateEmails.length > 0) {
-        // Remove duplicates using Set
-        const uniqueAlternates = user.alternateEmails.filter(
-          altEmail => altEmail && altEmail !== user.email
-        );
-        emailsToSend.push(...uniqueAlternates);
-      }
+        const isValidEmail = (email) =>
+          email && typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-      // ✅ Skip if no valid emails
-      if (emailsToSend.length === 0) {
-        console.warn(`⚠️ Skipping user ${user._id} - no valid emails`);
-        continue;
-      }
+        for (let i = 0; i < users.length; i++) {
+          const user = users[i];
 
-      // ✅ Generate unique token and link (shared for all user's emails)
-      const token = generateToken();
-      const link = `${process.env.FRONTEND_URL}/update-form?token=${token}`;
-      //const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${token}`;
+          if (user.isOptedOut) {
+            console.log(`🚫 Skipping ${user.email || user._id} — opted out`);
+            continue;
+          }
 
-      // ✅ Assign default role
-      if (!user.role) {
-        user.role = "Self";
-        await user.save();
-      }
+          const updated = await UpdatedData.findOne({ user: user._id });
+          if (updated) {
+            console.log(`⏭️ Skipping ${user.email || user._id} — already submitted`);
+            continue;
+          }
 
-      // ✅ Email content with unsubscribe link
-      const html = `
+          const deferred = await DeferredData.findOne({ user: user._id });
+          if (deferred && deferred.attempts >= 3) {
+            console.log(`🚫 Skipping ${user.email || user._id} — max attempts reached`);
+            continue;
+          }
+
+          // Collect valid emails
+          const emailsToSend = [];
+          if (user.email && isValidEmail(user.email)) {
+            emailsToSend.push(user.email);
+          }
+          if (user.alternateEmails?.length) {
+            const uniqueValid = user.alternateEmails
+              .filter(alt => isValidEmail(alt) && alt.trim() !== user.email)
+              .map(alt => alt.trim());
+            emailsToSend.push(...uniqueValid);
+          }
+
+          if (emailsToSend.length === 0) {
+            console.warn(`⚠️ Skipping user ${user._id} - no valid emails`);
+            continue;
+          }
+
+          const token = generateToken();
+          const link = `${process.env.FRONTEND_URL}/update-form?token=${token}`;
+
+          // Ensure role exists
+          if (!user.role) {
+            await EmailUser.updateOne({ _id: user._id }, { $set: { role: "Self" } });
+          }
+
+          // Your HTML template (unchanged)
+          const html = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; color: #333; line-height: 1.6;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Introducing Badal</h1>
@@ -153,73 +164,111 @@ const sendFormEmails = async (req, res) => {
         </div>
       `;
 
-      console.log(`📧 Sending email to ${emailsToSend.length} address(es) for user ${user.name || user._id}`);
+          console.log(`📧 Sending to ${emailsToSend.length} address(es) for user ${user.name || user._id}`);
 
-      // ✅ Send to all email addresses for this user
-      let emailsSentForUser = 0;
-      for (const recipientEmail of emailsToSend) {
-        const emailSent = await sendEmail(recipientEmail, "Introducing Badal: A new home for your C4GT journey!", html);
+          let emailsSentForUser = 0;
+          for (const recipientEmail of emailsToSend) {
+            try {
+              const emailSent = await sendEmail(
+                recipientEmail,
+                "Introducing Badal: A new home for your C4GT journey!",
+                html
+              );
 
-        if (emailSent) {
-          // ✅ Log sent email with recipient address
-          await EmailLog.create({
-            user: user._id,
-            recipientEmail: recipientEmail,
-            emailType: "update_form",
-            sentAt: new Date(),
-            status: "sent",
-            linkToken: token,
-            verifiedPhone: null, // 🔹 placeholder for Firebase verification
-          });
+              if (emailSent) {
+                await EmailLog.create({
+                  user: user._id,
+                  recipientEmail,
+                  emailType: "initial_form",
+                  sentAt: new Date(),
+                  status: "sent",
+                  linkToken: token,
+                  verifiedPhone: null,
+                });
+                emailsSentForUser++;
+                console.log(`✅ Sent to ${recipientEmail}`);
+              } else {
+                throw new Error("sendEmail returned false");
+              }
+            } catch (err) {
+              console.error(`❌ Failed for ${recipientEmail}: ${err.message}`);
+              await EmailLog.create({
+                user: user._id,
+                recipientEmail,
+                emailType: "initial_form",
+                sentAt: new Date(),
+                status: "failed",
+                linkToken: token,
+                verifiedPhone: null,
+              });
+            }
+          }
 
-          emailsSentForUser++;
-          console.log(`✅ Email sent to ${recipientEmail}`);
-        } else {
-          // ❌ Email failed
-          await EmailLog.create({
-            user: user._id,
-            recipientEmail: recipientEmail,
-            emailType: "update_form",
-            sentAt: new Date(),
-            status: "failed",
-            linkToken: token,
-            verifiedPhone: null,
-          });
-          console.log(`❌ Email failed for ${recipientEmail}`);
+          if (emailsSentForUser > 0) {
+            await EmailUser.updateOne(
+              { _id: user._id },
+              {
+                $set: { lastEmailSent: new Date() },
+                $inc: { emailSentCount: emailsSentForUser }
+              }
+            );
+            sentCount += emailsSentForUser;
+          } else {
+            // Deferred logic
+            const existingDeferred = await DeferredData.findOne({ user: user._id });
+            if (existingDeferred) {
+              await DeferredData.updateOne(
+                { _id: existingDeferred._id },
+                { $inc: { attempts: 1 }, $set: { deferredAt: new Date() } }
+              );
+            } else {
+              await DeferredData.create({ user: user._id });
+            }
+          }
+
+          // Rate limit: pause every 10 users
+          if ((i + 1) % 10 === 0 && i < users.length - 1) {
+            console.log(`⏸️ Pausing 1s after ${i + 1} users`);
+            await delay(1000);
+          }
+        }
+
+        console.log(`✅ Background batch complete: ${sentCount} emails sent`);
+
+        // Admin notification (success)
+        try {
+          await sendEmail(
+            process.env.ADMIN_EMAIL || 'sampathchowdarie@gmail.com',
+            'C4GT Email Batch Complete',
+            `<p>Batch finished: ${new Date().toISOString()}</p>
+             <p>Users processed: ${users.length}</p>
+             <p>Emails sent: ${sentCount}</p>
+             <p>Mode: ${onlyUnsent ? 'Only unsent' : 'All eligible'}</p>`
+          );
+          console.log("📧 Admin success notification sent");
+        } catch (notifyErr) {
+          console.error("⚠️ Admin notification failed:", notifyErr.message);
+        }
+
+      } catch (backgroundErr) {
+        console.error("❌ Background batch failed:", backgroundErr);
+
+        // Admin failure notification
+        try {
+          await sendEmail(
+            process.env.ADMIN_EMAIL || 'admin@codeforgovtech.in',
+            'C4GT Email Batch FAILED',
+            `<p>Error occurred: ${backgroundErr.message}</p>
+             <p>Check server logs for details.</p>`
+          );
+        } catch (failNotifyErr) {
+          console.error("⚠️ Failed to send failure notification:", failNotifyErr.message);
         }
       }
+    })();
 
-      // ✅ If at least one email was sent successfully
-      if (emailsSentForUser > 0) {
-        // ✅ Update user record
-        user.lastEmailSent = new Date();
-        user.emailSentCount = (user.emailSentCount || 0) + emailsSentForUser;
-        await user.save();
-
-        sentCount += emailsSentForUser;
-      } else {
-        // ❌ All emails failed - add to DeferredData for retry
-        const existingDeferred = await DeferredData.findOne({ user: user._id });
-        if (existingDeferred) {
-          existingDeferred.attempts += 1;
-          existingDeferred.deferredAt = new Date();
-          await existingDeferred.save();
-        } else {
-          await DeferredData.create({ user: user._id });
-        }
-      }
-
-      // ✅ Rate limiting: pause every 10 emails to prevent SMTP throttling
-      if ((i + 1) % 10 === 0 && i < users.length - 1) {
-        console.log(`⏸️  Pausing for 1 second after ${i + 1} emails...`);
-        await delay(1000);
-      }
-    }
-
-    console.log(`✅ ${sentCount} emails sent successfully.`);
-    res.status(200).json({ message: "Emails sent successfully", sentCount });
   } catch (err) {
-    console.error("❌ Error sending form emails:", err);
+    console.error("❌ Error starting batch:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -257,16 +306,84 @@ const resendDeferredEmails = async () => {
         continue;
       }
 
-      // ✅ Additional safety: Check total reminder count to prevent infinite loop
+      // ✅ Check total reminder count to prevent infinite loop
       const reminderCount = await EmailLog.countDocuments({
         user: user._id,
         emailType: 'update_form_reminder'
       });
       
       if (reminderCount >= 3) {
-        console.log(`🛑 Max reminders (${reminderCount}) already sent to ${user.email} - removing from deferred`);
+        console.log(`🛑 Max reminders (${reminderCount}) already sent to ${user.email} - archiving and removing from deferred`);
+        
+        // ✅ Archive as inactive user before removing
+        try {
+          const emailsSent = await EmailLog.countDocuments({ 
+            user: user._id, 
+            emailType: { $in: ['initial_form', 'update_form_reminder'] }
+          });
+          
+          const emailsOpened = await EmailLog.countDocuments({ 
+            user: user._id, 
+            activatedAt: { $ne: null }
+          });
+          
+          const lastEmailLog = await EmailLog.findOne({ user: user._id })
+            .sort('-sentAt')
+            .select('sentAt')
+            .lean();
+          
+          const lastOpenedLog = await EmailLog.findOne({ 
+            user: user._id, 
+            activatedAt: { $ne: null } 
+          })
+            .sort('-activatedAt')
+            .select('activatedAt')
+            .lean();
+          
+          await InactiveUser.findOneAndUpdate(
+            { user: user._id },
+            {
+              $set: {
+                email: user.email,
+                reason: 'max_reminders',
+                totalDeferrals: deferred.attempts,
+                totalEmailsSent: emailsSent,
+                totalEmailsOpened: emailsOpened,
+                lastEmailSentAt: lastEmailLog?.sentAt,
+                lastOpenedAt: lastOpenedLog?.activatedAt,
+                markedInactiveAt: new Date(),
+                source: 'update_form',
+                canReengage: true,
+                notes: `Received ${reminderCount} reminders, no submission. Deferred ${deferred.attempts} times.`
+              }
+            },
+            { upsert: true, new: true }
+          );
+          
+          console.log(`📦 Archived user with max reminders: ${user.email}`);
+        } catch (archiveErr) {
+          console.error(`❌ Failed to archive user ${user.email}:`, archiveErr.message);
+        }
+        
         await DeferredData.deleteOne({ _id: deferred._id });
-        await EmailLog.updateMany({ user: user._id, usedAt: null }, { usedAt: new Date() });
+        
+        // ✅ Check if user actually submitted before marking tokens
+        const submitted = await UpdatedData.findOne({ user: user._id });
+        if (submitted) {
+          // User completed form - mark all tokens as used
+          await EmailLog.updateMany(
+            { user: user._id, usedAt: null, status: { $nin: ['expired', 'used'] } },
+            { $set: { usedAt: new Date(), status: 'used' } }
+          );
+          console.log('✅ User submitted - all tokens marked as used');
+        } else {
+          // User never submitted - just mark as expired (don't set usedAt)
+          await EmailLog.updateMany(
+            { user: user._id, usedAt: null, status: { $nin: ['expired', 'used'] } },
+            { $set: { status: 'expired' } }
+          );
+          console.log('⚠️ User never submitted - tokens marked as expired');
+        }
         continue;
       }
 
@@ -440,19 +557,89 @@ const resendDeferredEmails = async () => {
     const updatedUserIds = updatedUsers.map((u) => u.user);
     await DeferredData.deleteMany({ user: { $in: updatedUserIds } });
 
-    // 🧹 Remove users who exceeded 3 attempts AND mark their tokens as used
-    const maxedOut = await DeferredData.find({ attempts: { $gte: 3 } }).select('user');
+    // 🧹 Archive users who exceeded 3 attempts (DON'T DELETE without archiving)
+    const maxedOut = await DeferredData.find({ attempts: { $gte: 3 } }).populate('user');
     if (maxedOut.length > 0) {
-      // Mark all their open tokens as used to prevent re-adding to deferred
+      console.log(`📦 Found ${maxedOut.length} users with max deferrals - archiving...`);
+      
       for (const def of maxedOut) {
-        await EmailLog.updateMany(
-          { user: def.user, usedAt: null },
-          { usedAt: new Date() }
-        );
+        const user = def.user;
+        if (!user) {
+          console.warn('⚠️ DeferredData missing user reference, skipping...');
+          continue;
+        }
+        
+        const submitted = await UpdatedData.findOne({ user: user._id });
+        
+        if (!submitted) {
+          // ✅ Archive inactive user with full tracking data
+          try {
+            // Count emails for audit trail
+            const emailsSent = await EmailLog.countDocuments({ 
+              user: user._id, 
+              emailType: { $in: ['initial_form', 'update_form_reminder'] }
+            });
+            
+            const emailsOpened = await EmailLog.countDocuments({ 
+              user: user._id, 
+              activatedAt: { $ne: null }
+            });
+            
+            const lastEmailLog = await EmailLog.findOne({ user: user._id })
+              .sort('-sentAt')
+              .select('sentAt')
+              .lean();
+            
+            const lastOpenedLog = await EmailLog.findOne({ 
+              user: user._id, 
+              activatedAt: { $ne: null } 
+            })
+              .sort('-activatedAt')
+              .select('activatedAt')
+              .lean();
+            
+            await InactiveUser.findOneAndUpdate(
+              { user: user._id },
+              {
+                $set: {
+                  email: user.email,
+                  reason: 'max_deferrals',
+                  totalDeferrals: def.attempts,
+                  totalEmailsSent: emailsSent,
+                  totalEmailsOpened: emailsOpened,
+                  lastEmailSentAt: lastEmailLog?.sentAt,
+                  lastOpenedAt: lastOpenedLog?.activatedAt,
+                  markedInactiveAt: new Date(),
+                  source: 'update_form',
+                  canReengage: true,  // Can send "final reminder" campaign later
+                  notes: `User deferred ${def.attempts} times. Last deferred: ${def.deferredAt}`
+                }
+              },
+              { upsert: true, new: true }
+            );
+            
+            console.log(`📦 Archived max-deferred user: ${user.email} (${def.attempts} attempts, ${emailsOpened}/${emailsSent} opened)`);
+          } catch (archiveErr) {
+            console.error(`❌ Failed to archive user ${user.email}:`, archiveErr.message);
+          }
+          
+          // Mark tokens as expired (not used)
+          await EmailLog.updateMany(
+            { user: user._id, usedAt: null, status: { $nin: ['expired', 'used'] } },
+            { $set: { status: 'expired' } }
+          );
+        } else {
+          // User submitted - mark as used
+          await EmailLog.updateMany(
+            { user: user._id, usedAt: null, status: { $nin: ['expired', 'used'] } },
+            { $set: { usedAt: new Date(), status: 'used' } }
+          );
+        }
       }
       
+      // NOW delete DeferredData (after archiving)
       const removed = await DeferredData.deleteMany({ attempts: { $gte: 3 } });
-      console.log(`🧹 Removed ${removed.deletedCount} deferred users after max attempts (tokens marked as used).`);
+      console.log(`🧹 Removed ${removed.deletedCount} deferred records after archiving to InactiveUser.`);
     }
 
     console.log("✅ Deferred email resend process completed.");

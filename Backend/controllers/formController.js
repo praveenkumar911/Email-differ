@@ -71,12 +71,19 @@ const activateToken = async (req, res) => {
     const log = await EmailLog.findOne({ linkToken: token });
     if (!log) return res.status(400).json({ message: 'Invalid token' });
 
-    // ✅ Check if token was marked as used
-    if (log.usedAt) {
+    // ✅ Check if token was marked as used or expired
+    if (log.usedAt || log.status === 'expired' || log.status === 'used') {
       // Check if user actually submitted the form
       const submitted = await UpdatedData.findOne({ user: log.user });
       if (submitted) {
         return res.status(400).json({ message: 'Form already submitted' });
+      }
+
+      // ✅ If expired by system, don't allow reopening
+      if (log.status === 'expired') {
+        return res.status(410).json({ 
+          message: 'This link has expired. Please check your email for a new link.' 
+        });
       }
 
       // ✅ Check if user intentionally deferred - don't allow reopening
@@ -143,7 +150,10 @@ const validateToken = async (req, res) => {
     if (!log) return res.status(200).json({ valid: false, message: 'Invalid token' });
 
     if (log.usedAt)
-      return res.status(200).json({ valid: false, message: 'Link already used' });
+      return res.status(200).json({ valid: false, message: 'Form already submitted' });
+    
+    if (log.status === 'expired' || log.status === 'used')
+      return res.status(200).json({ valid: false, message: 'Link expired' });
 
     const now = new Date();
     const expiryTime = log.activatedAt
@@ -265,6 +275,8 @@ const submitForm = async (req, res) => {
     const log = await EmailLog.findOne({ linkToken: token }).populate('user');
     if (!log) return res.status(400).json({ message: 'Invalid or expired token' });
     if (log.usedAt) return res.status(400).json({ message: 'This form has already been submitted' });
+    if (log.status === 'expired') return res.status(410).json({ message: 'This link has expired. Please request a new one.' });
+    if (log.status === 'used') return res.status(400).json({ message: 'This form has already been submitted' });
 
     // Check expiry (with OAuth consideration)
     const now = new Date();
@@ -519,6 +531,7 @@ const submitForm = async (req, res) => {
             // continue the normal flow: mark token used and cleanup
             // ✅ Mark token as used
 log.usedAt = new Date();
+log.status = 'used';
 await log.save();
 
 // ✅ Clean up partial/deferred data
@@ -614,6 +627,7 @@ return res.status(200).json({
 
     // ✅ Mark token as used
     log.usedAt = new Date();
+    log.status = 'used';
     await log.save();
 
     // ✅ Clean up partial/deferred data
@@ -642,7 +656,9 @@ const deferForm = async (req, res) => {
 
     const log = await EmailLog.findOne({ linkToken: token });
     if (!log) return res.status(400).json({ message: 'Invalid or expired token' });
-    if (log.usedAt) return res.status(400).json({ message: 'This link has already been used' });
+    if (log.usedAt) return res.status(400).json({ message: 'Form already submitted' });
+    if (log.status === 'expired') return res.status(410).json({ message: 'Link expired' });
+    if (log.status === 'used') return res.status(400).json({ message: 'Form already submitted' });
 
     const now = new Date();
     const expiryTime = log.activatedAt
@@ -667,6 +683,7 @@ const deferForm = async (req, res) => {
     }
 
     log.usedAt = new Date();
+    log.status = 'used';
     await log.save();
 
     res.status(200).json({ message: 'Form deferred successfully' });
@@ -716,9 +733,11 @@ const handleOptOut = async (req, res) => {
     const user = log.user;
     if (!user) return res.status(404).json({ message: 'User not found for token' });
 
-    if (log.usedAt) return res.status(400).json({ message: 'Token already used' });
+    if (log.usedAt || log.status === 'expired' || log.status === 'used') 
+      return res.status(400).json({ message: 'This link is no longer valid' });
 
     log.usedAt = new Date();
+    log.status = 'used';
     await log.save();
 
     const existing = await OptOutUser.findOne({ user: user._id });
@@ -1021,6 +1040,7 @@ const createUserInProduction = async (formData, firebaseToken) => {
       roleId: mappedRole.roleId,
       
       githubUrl: formData.githubUrl || null,
+      githubId: formData.githubId || null,
       discordId: formData.discordId || null,
       linkedInUrl: formData.linkedinId || null,
       

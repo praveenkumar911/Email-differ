@@ -59,23 +59,36 @@ app.use('/api',userroutes)
 app.use("/api/discord", discordRoutes);
 
 
-// 1️⃣ Stale activations: clean up every 6 hours
-cron.schedule('0 */6 * * *', async () => {
-  console.log('🧹 Production: Checking for stale activations...');
+// 1️⃣ Stale activations: clean up every 30 minutes
+// → Quickly catches users who opened but abandoned form
+cron.schedule('*/30 * * * *', async () => {
+  console.log('🧹 Production: Checking for stale activations (every 30 minutes)...');
   try {
     await expireStaleActivations();
   } catch (err) {
-    console.error('❌ Failed:', err.message);
+    console.error('❌ expireStaleActivations failed:', err.message);
   }
 });
 
-// 2️⃣ 24h-old unopened tokens: run once daily
-cron.schedule('0 2 * * *', expireNeverOpened); 
-// → Every day at 2:00 AM (low traffic time)
+// 2️⃣ 24h-old unopened tokens: run daily at 6 PM
+// → Runs 30+ hours after morning batch emails (10 AM-11 AM)
+// → Avoids race condition with batch email sending
+// → Covers SMTP delivery delays
+cron.schedule('0 18 * * *', async () => {
+  console.log('📧 Production: Expiring never-opened tokens (daily at 6 PM)...');
+  try {
+    await expireNeverOpened();
+  } catch (err) {
+    console.error('❌ expireNeverOpened failed:', err.message);
+  }
+});
 
-// 3️⃣ Deferred emails: send every 15 minutes (changed for testing)
-cron.schedule('*/15 * * * *', async () => {
-  console.log('📨 Production: Resending deferred emails (every 15 minutes)...');
+// 3️⃣ Deferred emails: send every 48 hours at 10 AM
+// → Reduces reminder spam, gives users breathing room
+// → Sends during business hours when users check email
+// → Better engagement rates than frequent reminders
+cron.schedule('0 10 */2 * *', async () => {
+  console.log('📨 Production: Resending deferred emails (every 48 hours at 10 AM)...');
   try {
     await resendDeferredEmails();
   } catch (err) {
@@ -116,7 +129,7 @@ cron.schedule('0 4 * * 0', async () => {
 });
 
 // 6️⃣ Cleanup old PartialUpdateData: run daily at 5 AM
-cron.schedule('0 5 * * *', async () => {
+cron.schedule('0 10 */2 * *', async () => {
   console.log('🗑️ Production: Cleaning orphaned PartialUpdateData...');
   try {
     const cutoffDate = new Date();
