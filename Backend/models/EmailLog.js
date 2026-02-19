@@ -5,7 +5,12 @@ const EmailLogSchema = new mongoose.Schema({
   recipientEmail: { type: String }, // Track which specific email received the message
   emailType: String,
   sentAt: { type: Date, default: Date.now },
-  status: String,
+  status: { 
+    type: String, 
+    enum: ['sent', 'expired', 'used', 'failed'],
+    default: 'sent',
+    index: true
+  },
   linkToken: { 
     type: String, 
     

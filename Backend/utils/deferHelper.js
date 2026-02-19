@@ -17,11 +17,11 @@ const handleDeferredUser = async (user, emailLogId) => {
       return;
     }
 
-    // Add to DeferredData
+    // Add/update DeferredData
     let deferred = await DeferredData.findOne({ user: user._id });
     if (deferred) {
       if (deferred.attempts >= 3) {
-        console.log('❌ Skipping user - max attempts reached');
+        console.log('❌ Skipping - max attempts');
         return;
       }
       deferred.attempts += 1;
@@ -29,51 +29,19 @@ const handleDeferredUser = async (user, emailLogId) => {
       await deferred.save();
       console.log('🔄 Updated deferred record:', deferred.attempts);
     } else {
-      const newDeferred = await DeferredData.create({ user: user._id });
-      console.log('🆕 Created deferred record:', newDeferred._id);
+      await DeferredData.create({ user: user._id });
+      console.log('🆕 Created deferred record');
     }
 
-    // Expire original token
-    await EmailLog.updateOne({ _id: emailLogId }, { usedAt: new Date() });
+    // Expire the original token (system action - only set status, not usedAt)
+    await EmailLog.updateOne({ _id: emailLogId }, { 
+      status: 'expired'
+    });
     console.log('⏰ Expired token:', emailLogId);
 
-    // Send reminder email
-    const newToken = generateToken();
-    const link = `${process.env.FRONTEND_URL}/update-form?token=${newToken}`;
-    const optOutLink = `${process.env.FRONTEND_URL}/opt-out?token=${newToken}`;
-    
-    const html = `
-      <h3>Hello ${user.name || "User"},</h3>
-      <p>We noticed you haven't completed your C4GT profile setup yet.</p>
-      <p>Please take a moment to update your information:</p>
-      <p>
-        <a href="${link}" target="_blank" 
-           style="background-color: #4CAF50; color: white; padding: 14px 20px; 
-                  text-decoration: none; border-radius: 4px; display: inline-block;">
-          Complete C4GT Profile
-        </a>
-      </p>
-      <p>This link will expire in 24 hours.</p>
-      <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;" />
-      <p style="font-size: 12px; color: #666;">
-        If you no longer wish to receive these emails, 
-        <a href="${optOutLink}" style="color: #666;">unsubscribe here</a>.
-      </p>
-    `;
-    
-    const emailSent = await sendEmail(user.email, 'C4GT - Complete Your Profile Setup', html);
-    console.log('📧 Email sent:', emailSent);
-    
-    if (emailSent) {
-      await EmailLog.create({
-        user: user._id,
-        emailType: 'auto_defer_reminder',
-        sentAt: new Date(),
-        status: 'sent',
-        linkToken: newToken,
-      });
-      console.log('📝 Created reminder email log');
-    }
+    // Note: Reminder emails will be sent by resendDeferredEmails cron job
+    // This prevents duplicate emails for users with multiple email addresses
+
   } catch (err) {
     console.error('💥 Error in handleDeferredUser:', err);
   }

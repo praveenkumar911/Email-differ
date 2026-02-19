@@ -100,10 +100,10 @@ const githubRegex = /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_-]+\/?$/;
 // eslint-disable-next-line no-unused-vars
 const linkedinRegex = /^https:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+\/?$/;
 
-// const DISCORD_REDIRECT = "https://pl-app.iiit.ac.in/rcts/account-setup/discord-callback";
-// const DISCORD_INVITE = "https://discord.gg/BsbzbUHz";
-const DISCORD_REDIRECT = "http://127.0.0.1:3000/rcts/codeforgovtech/discord-callback";
-const DISCORD_INVITE = "https://discord.gg/BsbzbUHz";
+const DISCORD_REDIRECT = "https://pl-app.iiit.ac.in/rcts/account-setup/discord-callback";
+const DISCORD_INVITE = "https://discord.gg/CUG6FzsZ";
+// const DISCORD_REDIRECT = "http://127.0.0.1:3000/rcts/codeforgovtech/discord-callback";
+// const DISCORD_INVITE = "https://discord.gg/CUG6FzsZ";
 // ✅ Generate OAuth state for CSRF protection
 const generateOAuthState = () => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -371,26 +371,31 @@ const UpdateForm = () => {
             setTimeRemaining(remaining);
           }
 
-          // ⏰ Token expires after 7 days (matches backend expiry window)
-          const timer = setTimeout(() => {
-            setStatus("expired");
-            alert(
-              "This link has expired. Please check your email for a new update link."
-            );
-          }, 7 * 24 * 60 * 60 * 1000); // 7 days
-
-          return () => clearTimeout(timer);
+          // ✅ Token expiry is handled by backend cron jobs (24h for unopened, 10min after activation)
+          // No need for frontend timeout - backend will return 410 status when expired
         } else {
           setStatus("invalid");
           setErrorMessage(res.data.message || "Invalid token");
         }
       } catch (err) {
         const errorMsg = err.response?.data?.message || "Failed to load form";
+        const statusCode = err.response?.status;
         
+        // ✅ Handle 410 Gone - link expired (backend returns 410 for expired status)
+        if (statusCode === 410) {
+          setStatus("expired");
+          setErrorMessage("This link has expired. Please check your email for a new link.");
+        }
         // ✅ Check if form was already submitted
-        if (errorMsg === "Form already submitted") {
+        else if (errorMsg === "Form already submitted" || errorMsg === "This form has already been submitted") {
           setStatus("submitted");
-        } else {
+        }
+        // ✅ Check for expired link messages
+        else if (errorMsg.includes("expired") || errorMsg.includes("This link has expired")) {
+          setStatus("expired");
+          setErrorMessage(errorMsg);
+        }
+        else {
           setStatus("invalid");
           setErrorMessage(errorMsg);
         }
@@ -434,6 +439,7 @@ const UpdateForm = () => {
     const verified = sessionStorage.getItem("githubVerified") === "true";
     const username = sessionStorage.getItem("githubUsername");
     const url = sessionStorage.getItem("githubUrl");
+    const githubId = sessionStorage.getItem("githubId");
 
     if (verified && username && url) {
       setGithubStatus({
@@ -442,7 +448,11 @@ const UpdateForm = () => {
         username,
         error: "",
       });
-      setFormData(prev => ({ ...prev, githubUrl: url }));
+      setFormData(prev => ({
+        ...prev,
+        githubUrl: url,
+        githubId: githubId || prev.githubId,
+      }));
     }
   }, []);
   
@@ -478,23 +488,6 @@ const UpdateForm = () => {
       return () => clearInterval(interval);
     }
   }, [status]);
-
-  // Restore GitHub verification from sessionStorage
-  useEffect(() => {
-    const verified = sessionStorage.getItem("githubVerified") === "true";
-    const username = sessionStorage.getItem("githubUsername");
-    const url = sessionStorage.getItem("githubUrl");
-
-    if (verified && username && url) {
-      setGithubStatus({
-        verifying: false,
-        verified: true,
-        username,
-        error: "",
-      });
-      setFormData(prev => ({ ...prev, githubUrl: url }));
-    }
-  }, []);
 
   // ✅ Restore phone verification from sessionStorage on mount
   useEffect(() => {
@@ -592,17 +585,23 @@ const UpdateForm = () => {
       const info = getAdditionalUserInfo(result);
       const githubUsername = info?.username;
       const githubAvatar = info?.profile?.avatar_url || "";
+      const githubNumericId = info?.profile?.id;
 
       if (!githubUsername) throw new Error("Unable to retrieve GitHub username");
 
       const verifiedUrl = `https://github.com/${githubUsername}`;
       
-      setFormData(prev => ({ ...prev, githubUrl: verifiedUrl }));
+      setFormData(prev => ({
+        ...prev,
+        githubUrl: verifiedUrl,
+        githubId: githubNumericId ? String(githubNumericId) : null,
+      }));
 
       // ✅ Store in sessionStorage for persistence
       sessionStorage.setItem("githubVerified", "true");
       sessionStorage.setItem("githubUsername", githubUsername);
       sessionStorage.setItem("githubUrl", verifiedUrl);
+      sessionStorage.setItem("githubId", githubNumericId ? String(githubNumericId) : "");
       sessionStorage.setItem("githubAvatar", githubAvatar);
 
       setGithubStatus({
@@ -1033,7 +1032,7 @@ const UpdateForm = () => {
       isDirtyRef.current = false;
       
       // ✅ Get verified social media data from sessionStorage
-      const githubUsername = sessionStorage.getItem("githubUsername") || "";
+      const githubId = sessionStorage.getItem("githubId") || "";
       const githubUrl = sessionStorage.getItem("githubUrl") || "";
       const discordId = sessionStorage.getItem("discordId") || "";
       
@@ -1050,7 +1049,7 @@ const UpdateForm = () => {
         role: formData.role,
         techStack: formData.skills,
         githubUrl: githubUrl || formData.githubUrl?.trim() || null,
-        githubId: githubUsername || formData.githubId?.trim() || null,
+        githubId: githubId || formData.githubId?.trim() || null,
         discordId: discordId || formData.discordId?.trim() || null,
         linkedinId: formData.linkedinId?.trim() || null,
         token,
@@ -1083,6 +1082,7 @@ const UpdateForm = () => {
       sessionStorage.removeItem("githubVerified");
       sessionStorage.removeItem("githubUsername");
       sessionStorage.removeItem("githubUrl");
+      sessionStorage.removeItem("githubId");
       sessionStorage.removeItem("githubAvatar");
       sessionStorage.removeItem("discordVerified");
       sessionStorage.removeItem("discordUsername");
@@ -1099,9 +1099,20 @@ const UpdateForm = () => {
       console.error("Error status:", err.response?.status);
       
       const errorMessage = err.response?.data?.message || "Submission failed. Please try again.";
+      const statusCode = err.response?.status;
+      
+      // ✅ Handle 410 Gone - link expired during submission
+      if (statusCode === 410) {
+        setStatus("expired");
+        showAlert(
+          "This link has expired. Please check your email for a new link.",
+          "error"
+        );
+        return;
+      }
       
       // ✅ Handle 409 Conflict (user already exists)
-      if (err.response?.status === 409) {
+      if (statusCode === 409) {
         const userId = err.response?.data?.userId;
         showAlert(
           `This account already exists${userId ? ` (User ID: ${userId})` : ''}. ${errorMessage}`,
@@ -1110,8 +1121,25 @@ const UpdateForm = () => {
         return;
       }
       
+      // ✅ Handle 400 Bad Request (form already submitted, max attempts, etc.)
+      if (statusCode === 400) {
+        if (errorMessage.includes("already submitted") || errorMessage.includes("This form has already been submitted")) {
+          setStatus("submitted");
+          showAlert("This form has already been submitted.", "info");
+          return;
+        }
+        if (errorMessage.includes("Max attempts exceeded")) {
+          setStatus("expired");
+          showAlert(
+            "You have reached the maximum number of attempts. Please contact support if you need assistance.",
+            "error"
+          );
+          return;
+        }
+      }
+      
       // ✅ If phone conflict error, reset phone verification so user can change number
-      if (errorMessage.includes("phone number") || errorMessage.includes("already registered")) {
+      if (errorMessage.includes("phone number") || errorMessage.includes("already registered") || errorMessage.includes("duplicate_phone")) {
         setPhoneVerification({
           isVerified: false,
           showOtpInput: false,
@@ -1144,10 +1172,27 @@ const UpdateForm = () => {
       setFadeOut(true);
       setTimeout(() => setStatus("deferred"), 600); // fade-out animation time
     } catch (err) {
-      showAlert(
-        err.response?.data?.message || "Failed to defer form.",
-        "error"
-      );
+      const errorMessage = err.response?.data?.message || "Failed to defer form.";
+      const statusCode = err.response?.status;
+      
+      // ✅ Handle max attempts exceeded
+      if (statusCode === 400 && errorMessage.includes("Max attempts exceeded")) {
+        showAlert(
+          "You have reached the maximum number of deferrals (3 attempts). The form will be closed and you'll receive a reminder email later.",
+          "error"
+        );
+        setStatus("expired");
+        return;
+      }
+      
+      // ✅ Handle expired link
+      if (statusCode === 410 || errorMessage.includes("expired")) {
+        setStatus("expired");
+        showAlert("This link has expired. Please check your email for a new link.", "error");
+        return;
+      }
+      
+      showAlert(errorMessage, "error");
     }
   };
 
